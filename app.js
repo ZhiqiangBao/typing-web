@@ -1,5 +1,6 @@
 "use strict";
 
+/* ============== DOM 引用 ============== */
 const passageEl = document.getElementById("passage");
 const inputEl = document.getElementById("input");
 const selectEl = document.getElementById("docSelect");
@@ -9,11 +10,76 @@ const statWpm = document.getElementById("statWpm");
 const statErr = document.getElementById("statErr");
 const statusEl = document.getElementById("status");
 
+/* ============== 状态 ============== */
 let target = "";
 let docs = [];
 let currentDoc = null;
 let startTime = null;
+let lastSavedKey = null; // 防止同一篇练习重复写入
 
+/* ============== localStorage 键 ============== */
+const K_HISTORY = "typing_history";
+const K_THEME = "typing_theme";
+
+/* ============== 历史 / 统计 ============== */
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(K_HISTORY) || "[]"); }
+  catch { return []; }
+}
+function saveHistory(list) { localStorage.setItem(K_HISTORY, JSON.stringify(list)); }
+
+function todayStr() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function recordResult({ wpm, acc, errors, typedLen, correctLen }) {
+  const list = loadHistory();
+  const key = `${currentDoc}-${Date.now()}`;
+  if (key === lastSavedKey) return;
+  lastSavedKey = key;
+  list.push({
+    ts: Date.now(),
+    day: todayStr(),
+    doc: currentDoc || "unknown",
+    wpm, acc, errors,
+    typed: typedLen, correct: correctLen
+  });
+  saveHistory(list);
+}
+
+function computeStats(list) {
+  if (!list.length) {
+    return {
+      total: { cnt: 0, acc: null, maxWpm: 0, avgWpm: 0, totalTyped: 0, totalCorrect: 0 },
+      day: { cnt: 0, acc: null, maxWpm: 0, avgWpm: 0, totalTyped: 0, totalCorrect: 0 },
+    };
+  }
+  const today = todayStr();
+  const agg = (arr) => {
+    let totalTyped = 0, totalCorrect = 0, sumWpm = 0, maxWpm = 0;
+    for (const r of arr) {
+      totalTyped += r.typed || 0;
+      totalCorrect += r.correct || 0;
+      sumWpm += r.wpm || 0;
+      if (r.wpm > maxWpm) maxWpm = r.wpm;
+    }
+    return {
+      cnt: arr.length,
+      acc: totalTyped ? Math.round((totalCorrect / totalTyped) * 100) : null,
+      maxWpm,
+      avgWpm: arr.length ? Math.round(sumWpm / arr.length) : 0,
+      totalTyped, totalCorrect,
+    };
+  };
+  return {
+    total: agg(list),
+    day: agg(list.filter(r => r.day === today)),
+  };
+}
+
+/* ============== 文档列表 ============== */
 async function loadDocList() {
   const res = await fetch("/api/docs", { cache: "no-store" });
   docs = await res.json();
@@ -27,6 +93,7 @@ function categorize(name) {
 
   if (base.startsWith("lolita")) return "洛丽塔 Lolita" + lang;
   if (base.startsWith("proust_swann")) return "追忆·斯万之恋" + lang;
+  if (base.startsWith("proust_ombre")) return "追忆·在少女们身旁" + lang;
   if (base.startsWith("proust")) return "追忆似水年华" + lang;
   if (base.startsWith("solitude")) return "百年孤独" + lang;
 
@@ -43,7 +110,8 @@ const GROUP_ORDER = [
   "洛丽塔 Lolita（英文）", "洛丽塔 Lolita（中文）",
   "追忆似水年华（英文）", "追忆似水年华（中文）",
   "追忆·斯万之恋（英文）", "追忆·斯万之恋（中文）",
-  "百年孤独（中文）", "百年孤独",
+  "追忆·在少女们身旁（英文）", "追忆·在少女们身旁（中文）",
+  "百年孤独（英文）", "百年孤独（中文）", "百年孤独",
   "英文练习", "中文诗文", "代码 / 符号", "其他",
 ];
 
@@ -111,10 +179,12 @@ function resetInput() {
   startTime = null;
   statusEl.textContent = "";
   statusEl.classList.remove("done");
+  lastSavedKey = null;
   update();
   inputEl.focus();
 }
 
+/* ============== 实时更新 + 完成时记录 ============== */
 function update() {
   const typed = inputEl.value;
   const spans = passageEl.children;
@@ -159,6 +229,13 @@ function update() {
   if (typedLen >= target.length && target.length > 0) {
     statusEl.classList.add("done");
     statusEl.textContent = `完成！准确率 ${acc}% · ${wpm} WPM · 错误 ${errors} 处`;
+
+    // 完成时写入历史
+    if (!lastSavedKey) {
+      recordResult({ wpm, acc, errors, typedLen, correctLen: correct });
+      // 若用户停在 Profile 页,刷新一下统计
+      if (currentView === "profile") renderProfile();
+    }
   } else {
     statusEl.classList.remove("done");
     statusEl.textContent = "";
@@ -183,11 +260,175 @@ selectEl.addEventListener("change", async () => {
   if (selectEl.value) await loadDoc(selectEl.value);
 });
 
+/* ============== 视图切换 ============== */
+let currentView = "practice";
+
+function switchView(name) {
+  currentView = name;
+  document.querySelectorAll(".tab").forEach(b => {
+    b.classList.toggle("active", b.dataset.view === name);
+  });
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-" + name).classList.add("active");
+  if (name === "profile") renderProfile();
+}
+
+document.querySelectorAll(".tab").forEach(b => {
+  b.addEventListener("click", () => switchView(b.dataset.view));
+});
+
+/* ============== Profile 渲染 ============== */
+let wpmChart = null;
+let errChart = null;
+
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function renderProfile() {
+  const list = loadHistory();
+  const s = computeStats(list);
+
+  // 顶部数据卡
+  document.getElementById("totalCnt").textContent = s.total.cnt;
+  document.getElementById("totalAcc").textContent = s.total.acc === null ? "—" : s.total.acc + "%";
+  document.getElementById("maxWpm").textContent = s.total.maxWpm;
+  document.getElementById("avgWpm").textContent = s.total.avgWpm;
+
+  document.getElementById("dayCnt").textContent = s.day.cnt;
+  document.getElementById("dayAcc").textContent = s.day.acc === null ? "—" : s.day.acc + "%";
+  document.getElementById("dayMaxWpm").textContent = s.day.maxWpm;
+  document.getElementById("dayAvgWpm").textContent = s.day.avgWpm;
+
+  // 历史列表(最近 30 条,倒序)
+  const listEl = document.getElementById("historyList");
+  const recent = list.slice(-30).reverse();
+  listEl.replaceChildren();
+  for (const r of recent) {
+    const item = document.createElement("div");
+    item.className = "history-item";
+    item.innerHTML = `
+      <span class="hi-date">${fmtTime(r.ts)}</span>
+      <span class="hi-doc">${(r.doc || "").replace(/\.(txt|md)$/i, "")}</span>
+      <span class="hi-wpm">${r.wpm} WPM</span>
+      <span class="hi-acc">准确率 ${r.acc}%</span>
+      <span class="hi-err">错误 ${r.errors}</span>
+    `;
+    listEl.appendChild(item);
+  }
+
+  renderCharts(list);
+}
+
+function renderCharts(list) {
+  const ink = cssVar("--ink") || "#1a1d24";
+  const muted = cssVar("--muted") || "#7a8296";
+  const accent = cssVar("--accent") || "#3b6ef6";
+  const wrong = cssVar("--wrong") || "#e5484d";
+  const grid = cssVar("--grid") || "rgba(0,0,0,0.06)";
+
+  const recent = list.slice(-30);
+  const labels = recent.map(r => fmtTime(r.ts));
+  const wpms = recent.map(r => r.wpm);
+  const errs = recent.map(r => r.errors);
+
+  const canvasFontColor = muted;
+  Chart.defaults.color = canvasFontColor;
+  Chart.defaults.font.family = "Segoe UI, system-ui, sans-serif";
+
+  // WPM 趋势图
+  const ctxWpm = document.getElementById("wpmTrendChart").getContext("2d");
+  if (wpmChart) wpmChart.destroy();
+  wpmChart = new Chart(ctxWpm, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "WPM",
+        data: wpms,
+        borderColor: accent,
+        backgroundColor: accent + "22",
+        tension: 0.3,
+        fill: true,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { title: { display: true, text: "WPM 趋势（最近 30 次）", color: ink } },
+      scales: {
+        x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { color: grid } },
+        y: { beginAtZero: true, ticks: { color: muted }, grid: { color: grid } },
+      },
+    },
+  });
+
+  // 错误数柱状图
+  const ctxErr = document.getElementById("errChart").getContext("2d");
+  if (errChart) errChart.destroy();
+  errChart = new Chart(ctxErr, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "错误字符数",
+        data: errs,
+        backgroundColor: wrong,
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { title: { display: true, text: "错误字符数（最近 30 次）", color: ink } },
+      scales: {
+        x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { color: grid } },
+        y: { beginAtZero: true, ticks: { color: muted }, grid: { color: grid } },
+      },
+    },
+  });
+}
+
+document.getElementById("clearHistoryBtn").addEventListener("click", () => {
+  if (!confirm("确认清空全部历史记录?此操作不可撤销。")) return;
+  saveHistory([]);
+  renderProfile();
+});
+
+/* ============== 主题切换 ============== */
+function applyTheme(name) {
+  if (name) document.documentElement.setAttribute("data-theme", name);
+  else document.documentElement.removeAttribute("data-theme");
+}
+
+const themeSelect = document.getElementById("themeSelect");
+const savedTheme = localStorage.getItem(K_THEME);
+if (savedTheme) {
+  applyTheme(savedTheme);
+  themeSelect.value = savedTheme;
+}
+themeSelect.addEventListener("change", () => {
+  const v = themeSelect.value;
+  applyTheme(v);
+  localStorage.setItem(K_THEME, v);
+  // 主题切换后,若在 profile 页,重绘图表以同步颜色
+  if (currentView === "profile") renderCharts(loadHistory());
+});
+
+/* ============== 初始化 ============== */
 (async function init() {
   try {
     await loadDocList();
   } catch (e) {
-    passageEl.textContent = "无法连接服务器，请确认 server.py 正在运行。";
+    passageEl.textContent = "无法连接服务器,请确认 server.py 正在运行。";
     inputEl.disabled = true;
     return;
   }
