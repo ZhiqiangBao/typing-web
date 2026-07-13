@@ -1,0 +1,10 @@
+const debounce = (fn, delay) => {
+  let timer = null;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+};
+
+const log = debounce((msg) => console.log(`[${Date.now()}] ${msg}`), 300);
+["a", "b", "c"].forEach((c) => log(c));
