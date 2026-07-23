@@ -35,10 +35,10 @@
         </div>
       </header>
 
-      <section class="stats">
+      <section class="stats" aria-live="polite" aria-atomic="false">
         <div class="stat"><span id="statProg">0%</span><label>进度</label></div>
         <div class="stat"><span id="statAcc">100%</span><label>准确率</label></div>
-        <div class="stat"><span id="statWpm">0</span><label>WPM</label></div>
+        <div class="stat"><span id="statWpm">0</span><label id="statSpeedLabel">WPM</label></div>
         <div class="stat"><span id="statErr">0</span><label>错误</label></div>
       </section>
 
@@ -48,12 +48,12 @@
         placeholder="在这里输入上面的文本…（一致显示黑色，不一致显示红色）"
         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
 
-      <div id="status" class="status"></div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
 
       <footer class="controls">
         <button id="newBtn" type="button">换一篇（随机）</button>
         <button id="resetBtn" type="button" class="ghost">重置</button>
-        <span class="hint">未输入=灰色 · 正确=黑色 · 错误=红色</span>
+        <span class="hint">Esc 重置 · Ctrl+Enter 换篇 · 未输入=灰 · 正确=黑 · 错误=红</span>
       </footer>
     </section>
 
@@ -61,7 +61,12 @@
     <section id="view-profile" class="view">
       <header class="head">
         <h1>训练档案</h1>
-        <button id="clearHistoryBtn" type="button" class="ghost">清空历史</button>
+        <div class="profile-actions">
+          <button id="exportHistoryBtn" type="button" class="ghost">导出</button>
+          <button id="importHistoryBtn" type="button" class="ghost">导入</button>
+          <input id="importFileInput" type="file" accept=".json,application/json" hidden>
+          <button id="clearHistoryBtn" type="button" class="ghost">清空历史</button>
+        </div>
       </header>
 
       <section class="stats">

@@ -1,11 +1,14 @@
+import argparse
 import http.server
 import json
 import os
+import socket
+import webbrowser
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCS_DIR = os.path.join(ROOT, "docs")
 DOC_EXTS = (".txt", ".md")
-PORT = 8000
+DEFAULT_PORT = 8000
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -45,10 +48,43 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+def port_available(port, host="127.0.0.1"):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            s.bind((host, port))
+        except OSError:
+            return False
+    return True
+
+
+def find_port(start, host="127.0.0.1", attempts=10):
+    for i in range(attempts):
+        port = start + i
+        if port_available(port, host):
+            return port
+    raise RuntimeError(f"No free port in range {start}-{start + attempts - 1}")
+
+
 def main():
+    parser = argparse.ArgumentParser(description="Typing Web local server")
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Port to listen on")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind")
+    parser.add_argument("--open", action="store_true", help="Open browser after start")
+    args = parser.parse_args()
+
     os.chdir(ROOT)
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
-    print(f"Typing app running at http://127.0.0.1:{PORT}/  (Ctrl+C to stop)")
+    port = args.port if port_available(args.port, args.host) else find_port(args.port, args.host)
+    if port != args.port:
+        print(f"Port {args.port} busy, using {port} instead.")
+
+    server = http.server.ThreadingHTTPServer((args.host, port), Handler)
+    url = f"http://{args.host}:{port}/"
+    print(f"Typing app running at {url}  (Ctrl+C to stop)")
+
+    if args.open:
+        webbrowser.open(url)
+
     try:
         server.serve_forever()
     except KeyboardInterrupt:
