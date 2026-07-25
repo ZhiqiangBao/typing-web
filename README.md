@@ -2,6 +2,12 @@
 
 一个基于原生 HTML / CSS / JavaScript 的打字练习 Web 应用，内置训练档案统计与图表可视化，所有数据保存在本地浏览器中，无需登录、无需后端数据库。
 
+## 🚀 在线 Demo
+
+👉 **[https://zhiqiangbao.github.io/typing-web/](https://zhiqiangbao.github.io/typing-web/)**
+
+> Demo 版本通过 GitHub Pages 部署，无需 Python 服务器即可运行。本地启动可使用下方的方式。
+
 ## 功能特性
 
 ### 练习模式（Practice）
