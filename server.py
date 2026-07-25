@@ -29,6 +29,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
         super().do_GET()
 
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+        super().end_headers()
+
     def _is_safe_doc(self, name):
         if not name or "\x00" in name:
             return False

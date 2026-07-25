@@ -61,6 +61,30 @@ def test_app_js_contains_features():
         assert needle in src, f"missing {needle} in app.js"
 
 
+def test_categories_json():
+    status, body = fetch("/docs/categories.json")
+    assert status == 200
+    data = json.loads(body.decode("utf-8"))
+    assert "prefixes" in data
+    assert len(data["prefixes"]) > 0
+
+
+def test_vendor_chart():
+    status, body = fetch("/vendor/chart.umd.min.js")
+    assert status == 200
+    assert len(body) > 100000
+
+
+def test_path_traversal_blocked():
+    import urllib.error
+    for bad_path in ("/docs/../server.py", "/docs/%2e%2e/server.py", "/docs/..%2fserver.py"):
+        try:
+            fetch(bad_path)
+            raise AssertionError(f"Path traversal not blocked: {bad_path}")
+        except urllib.error.HTTPError as e:
+            assert e.code == 403, f"Expected 403 for {bad_path}, got {e.code}"
+
+
 def main():
     proc = subprocess.Popen(
         [sys.executable, "server.py", "--port", str(PORT)],
@@ -75,6 +99,9 @@ def main():
         test_static_files()
         test_doc_content()
         test_app_js_contains_features()
+        test_categories_json()
+        test_vendor_chart()
+        test_path_traversal_blocked()
         print("All tests passed.")
         return 0
     finally:
