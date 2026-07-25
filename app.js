@@ -33,7 +33,253 @@ const K_LAST_DOC = "typing_last_doc";
 const K_TIMER = "typing_timer";
 const K_ZEN = "typing_zen";
 const K_PROFILE_FILTER = "typing_profile_filter";
+const K_LANG = "typing_lang";
 const MAX_HISTORY = 500;
+
+/* ============== i18n 国际化 ============== */
+const I18N = {
+  zh: {
+    app_title: "打字练习",
+    tab_practice: "练习 Practice",
+    tab_profile: "档案 Profile",
+    timer: "计时",
+    timer_label: "计时模式",
+    no_limit: "不限时",
+    theme: "主题",
+    theme_label: "选择主题",
+    theme_auto: "跟随系统",
+    theme_blue: "浅蓝",
+    theme_dark: "深色",
+    theme_beige: "米黄",
+    theme_green: "青绿",
+    zen_mode: "禅定模式",
+    zen_exit: "退出禅定",
+    zen_hint: "禅定模式：专注输入，无法退格，错误将保留。按 Esc 退出。",
+    zen_confirm: "切换到禅定模式将重置当前进度，确认？",
+    zen_exit_confirm: "退出禅定模式并结束练习？",
+    zen_end: "禅定结束",
+    select_doc: "选择文章",
+    progress: "进度",
+    accuracy: "准确率",
+    speed: "速度",
+    errors: "错误",
+    loading: "加载中...",
+    placeholder: "在这里输入上面的文本…（一致显示黑色，不一致显示红色）",
+    result_done: "🎉 完成！",
+    result_timeup: "⏰ 时间到！",
+    result_again: "再来一篇",
+    result_close: "关闭",
+    new_doc: "换一篇（随机）",
+    reset: "重置",
+    reset_confirm: "确认重置当前进度？",
+    hint: "Tab 下一篇 · Esc 重置/退出禅定 · Ctrl+Enter 换篇 · Ctrl+1/2 切换视图",
+    profile_title: "训练档案",
+    export: "导出",
+    import: "导入",
+    clear_history: "清空历史",
+    clear_confirm: "确认清空全部历史记录？此操作不可撤销。",
+    import_fail: "导入失败：请确认文件为有效的 JSON 历史记录。",
+    filter_all: "全部",
+    filter_zen: "禅定模式",
+    filter_count: "{n} 条记录",
+    filter_total: "共 {n} 条",
+    total_count: "总训练次数",
+    total_acc: "总正确率",
+    max_wpm: "最高 WPM",
+    avg_wpm: "平均 WPM",
+    today_count: "今日训练",
+    today_acc: "今日正确率",
+    today_max: "今日最高 WPM",
+    today_avg: "今日平均 WPM",
+    streak: "连续天数",
+    top_errors: "Top 5 易错键",
+    no_error_data: "暂无错误键位数据",
+    error_char_count: "错误字符数",
+    speed_trend: "速度趋势（最近 30 次）",
+    error_trend: "错误字符数（最近 30 次）",
+    acc_trend: "准确率趋势（最近 30 次）",
+    cannot_connect: "无法连接服务器，请确认 server.py 正在运行。",
+    no_docs: "请在 docs 文件夹中放入 .txt 或 .md 文档后刷新页面。",
+    load_failed: "加载",
+    load_failed_tip: "失败，请重试或换一篇。",
+    zen_badge: "禅",
+    doc_label_lolita: "洛丽塔 Lolita",
+    doc_label_lolita_en: "洛丽塔 Lolita（英文）",
+    doc_label_lolita_zh: "洛丽塔 Lolita（中文）",
+    doc_label_proust: "追忆似水年华",
+    doc_label_proust_en: "追忆似水年华（英文）",
+    doc_label_proust_zh: "追忆似水年华（中文）",
+    doc_label_swann: "追忆·斯万之恋",
+    doc_label_swann_en: "追忆·斯万之恋（英文）",
+    doc_label_swann_zh: "追忆·斯万之恋（中文）",
+    doc_label_ombre: "追忆·在少女们身旁",
+    doc_label_ombre_en: "追忆·在少女们身旁（英文）",
+    doc_label_ombre_zh: "追忆·在少女们身旁（中文）",
+    doc_label_solitude: "百年孤独",
+    doc_label_solitude_en: "百年孤独（英文）",
+    doc_label_solitude_zh: "百年孤独（中文）",
+    doc_label_code: "代码 / 符号",
+    doc_label_zh: "中文诗文",
+    doc_label_en: "英文练习",
+    doc_label_other: "其他",
+    lang_label: "语言",
+    lang_zh: "中文",
+    lang_en: "English",
+    wpm_unit: "WPM",
+    cpm_unit: "CPM",
+    speed_text: "{speed} {unit}",
+    acc_text: "{acc}%",
+    err_text: "{n} 处",
+    result_status: "{title}准确率 {acc}% · {speed} {unit} · 错误 {errors} 处",
+    result_status_en: "{title} 准确率 {acc}% · {speed} {unit} · 错误 {errors} 处",
+    result_speed: "{speed} {unit}",
+    result_err: "{n} 处",
+    import_success: "已导入，当前共 {n} 条记录。",
+    load_doc_failed: "加载{name}失败，请重试或换一篇。",
+  },
+  en: {
+    app_title: "Typing Practice",
+    tab_practice: "Practice",
+    tab_profile: "Profile",
+    timer: "Timer",
+    timer_label: "Timer",
+    no_limit: "No limit",
+    theme: "Theme",
+    theme_label: "Theme",
+    theme_auto: "System",
+    theme_blue: "Light Blue",
+    theme_dark: "Dark",
+    theme_beige: "Beige",
+    theme_green: "Green",
+    zen_mode: "Zen Mode",
+    zen_exit: "Exit Zen",
+    zen_hint: "Zen mode: Focus on typing. Backspace is disabled. Errors are kept. Press Esc to exit.",
+    zen_confirm: "Switching to Zen mode will reset current progress. Confirm?",
+    zen_exit_confirm: "Exit Zen mode and end this exercise?",
+    zen_end: "Zen ended",
+    select_doc: "Select Document",
+    progress: "Progress",
+    accuracy: "Accuracy",
+    speed: "Speed",
+    errors: "Errors",
+    loading: "Loading...",
+    placeholder: "Type the text above here... (black = correct, red = wrong)",
+    result_done: "🎉 Done!",
+    result_timeup: "⏰ Time's up!",
+    result_again: "Try Again",
+    result_close: "Close",
+    new_doc: "New Document (Random)",
+    reset: "Reset",
+    reset_confirm: "Confirm reset current progress?",
+    hint: "Tab next · Esc reset/exit zen · Ctrl+Enter new · Ctrl+1/2 switch view",
+    profile_title: "Training Profile",
+    export: "Export",
+    import: "Import",
+    clear_history: "Clear History",
+    clear_confirm: "Clear all history records? This cannot be undone.",
+    import_fail: "Import failed: please confirm the file is a valid JSON history.",
+    filter_all: "All",
+    filter_zen: "Zen Mode",
+    filter_count: "{n} records",
+    filter_total: "Total {n}",
+    total_count: "Total Sessions",
+    total_acc: "Overall Accuracy",
+    max_wpm: "Best WPM",
+    avg_wpm: "Avg WPM",
+    today_count: "Today",
+    today_acc: "Today Accuracy",
+    today_max: "Today Best",
+    today_avg: "Today Avg",
+    streak: "Day Streak",
+    top_errors: "Top 5 Error Keys",
+    no_error_data: "No error key data yet",
+    error_char_count: "Error Characters",
+    speed_trend: "Speed Trend (Last 30)",
+    error_trend: "Error Characters (Last 30)",
+    acc_trend: "Accuracy Trend (Last 30)",
+    cannot_connect: "Cannot connect to server. Please confirm server.py is running.",
+    no_docs: "Put .txt or .md files in the docs folder and refresh the page.",
+    load_failed: "Failed to load",
+    load_failed_tip: ". Please retry or choose another.",
+    zen_badge: "Zen",
+    doc_label_lolita: "Lolita",
+    doc_label_lolita_en: "Lolita (EN)",
+    doc_label_lolita_zh: "Lolita (ZH)",
+    doc_label_proust: "In Search of Lost Time",
+    doc_label_proust_en: "In Search of Lost Time (EN)",
+    doc_label_proust_zh: "In Search of Lost Time (ZH)",
+    doc_label_swann: "Swann's Way",
+    doc_label_swann_en: "Swann's Way (EN)",
+    doc_label_swann_zh: "Swann's Way (ZH)",
+    doc_label_ombre: "Within a Budding Grove",
+    doc_label_ombre_en: "Within a Budding Grove (EN)",
+    doc_label_ombre_zh: "Within a Budding Grove (ZH)",
+    doc_label_solitude: "One Hundred Years of Solitude",
+    doc_label_solitude_en: "One Hundred Years of Solitude (EN)",
+    doc_label_solitude_zh: "One Hundred Years of Solitude (ZH)",
+    doc_label_code: "Code / Symbols",
+    doc_label_zh: "Chinese Poetry",
+    doc_label_en: "English Practice",
+    doc_label_other: "Other",
+    lang_label: "Lang",
+    lang_zh: "中文",
+    lang_en: "English",
+    wpm_unit: "WPM",
+    cpm_unit: "CPM",
+    speed_text: "{speed} {unit}",
+    acc_text: "{acc}%",
+    err_text: "{n}",
+    result_status: "{title} Accuracy {acc}% · {speed} {unit} · {errors} errors",
+    result_status_en: "{title} Accuracy {acc}% · {speed} {unit} · {errors} errors",
+    result_speed: "{speed} {unit}",
+    result_err: "{n}",
+    import_success: "Imported successfully. {n} records total.",
+    load_doc_failed: "Failed to load {name}. Please retry or choose another.",
+  },
+};
+
+let currentLang = localStorage.getItem(K_LANG) || (navigator.language?.startsWith("zh") ? "zh" : "en");
+
+function t(key, params) {
+  const dict = I18N[currentLang] || I18N.zh;
+  let str = dict[key] || I18N.zh[key] || key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      str = str.replace(`{${k}}`, v);
+    }
+  }
+  return str;
+}
+
+function applyLanguage() {
+  document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
+  document.title = t("app_title");
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.dataset.i18n;
+    if (t(key)) el.textContent = t(key);
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+    const key = el.dataset.i18nPh;
+    if (t(key)) el.placeholder = t(key);
+  });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+    const key = el.dataset.i18nAria;
+    if (t(key)) el.setAttribute("aria-label", t(key));
+  });
+  const zenBtn = document.getElementById("zenBtn");
+  if (zenBtn) zenBtn.textContent = zenMode ? t("zen_exit") : t("zen_mode");
+  const statusEl = document.getElementById("status");
+  if (zenMode && statusEl && !statusEl.classList.contains("done")) {
+    statusEl.textContent = t("zen_hint");
+  }
+  renderDocCategories();
+  if (currentDoc) {
+    statSpeedLabel.textContent = isChineseDoc(currentDoc) ? t("cpm_unit") : t("wpm_unit");
+  }
+  if (currentView === "profile") {
+    renderProfile();
+  }
+}
 
 /* ============== 工具 ============== */
 function isChineseDoc(name) {
@@ -214,45 +460,51 @@ async function loadCategoriesConfig() {
 
 function categorize(name) {
   const base = name.replace(/\.(txt|md)$/i, "");
-  let lang = "";
-  if (base.includes("_en")) lang = "（英文）";
-  else if (base.includes("_zh")) lang = "（中文）";
 
   // Try config file first
   if (categoriesConfig && categoriesConfig.prefixes) {
     for (const entry of categoriesConfig.prefixes) {
       if (base.startsWith(entry.prefix)) {
-        return entry.category + lang;
+        return entry.category_key || entry.prefix;
       }
     }
   }
 
-  // Fallback to hardcoded
-  if (base.startsWith("lolita")) return "洛丽塔 Lolita" + lang;
-  if (base.startsWith("proust_swann")) return "追忆·斯万之恋" + lang;
-  if (base.startsWith("proust_ombre")) return "追忆·在少女们身旁" + lang;
-  if (base.startsWith("proust")) return "追忆似水年华" + lang;
-  if (base.startsWith("solitude")) return "百年孤独" + lang;
+  if (base.startsWith("lolita")) return "lolita";
+  if (base.startsWith("proust_swann")) return "proust_swann";
+  if (base.startsWith("proust_ombre")) return "proust_ombre";
+  if (base.startsWith("proust")) return "proust";
+  if (base.startsWith("solitude")) return "solitude";
 
   const code = ["code_cpp", "python_code", "javascript_code", "sql_query", "numbers_symbols"];
-  if (code.includes(base)) return "代码 / 符号";
+  if (code.includes(base)) return "code";
   const zh = ["tang_poems", "chinese", "chinese_prose", "science_light"];
-  if (zh.includes(base)) return "中文诗文";
+  if (zh.includes(base)) return "zh_poetry";
   const en = ["english_story", "proverbs", "pangrams", "quotes", "tech_gpu"];
-  if (en.includes(base)) return "英文练习";
-  return "其他";
+  if (en.includes(base)) return "en_practice";
+  return "other";
+}
+
+function categoryLabel(name) {
+  const base = name.replace(/\.(txt|md)$/i, "");
+  const cat = categorize(name);
+  const hasEn = base.includes("_en");
+  const hasZh = base.includes("_zh");
+  const langKey = hasEn ? "_en" : hasZh ? "_zh" : "";
+  return t("doc_label_" + cat + langKey);
 }
 
 const GROUP_ORDER = [
-  "洛丽塔 Lolita（英文）", "洛丽塔 Lolita（中文）",
-  "追忆似水年华（英文）", "追忆似水年华（中文）",
-  "追忆·斯万之恋（英文）", "追忆·斯万之恋（中文）",
-  "追忆·在少女们身旁（英文）", "追忆·在少女们身旁（中文）",
-  "百年孤独（英文）", "百年孤独（中文）", "百年孤独",
-  "英文练习", "中文诗文", "代码 / 符号", "其他",
+  "lolita_en", "lolita_zh", "lolita",
+  "proust_en", "proust_zh",
+  "proust_swann_en", "proust_swann_zh",
+  "proust_ombre_en", "proust_ombre_zh",
+  "solitude_en", "solitude_zh", "solitude",
+  "en_practice", "zh_poetry", "code", "other",
 ];
 
 function populateSelect() {
+  const prevValue = selectEl.value;
   selectEl.replaceChildren();
   const groups = new Map();
   for (const name of docs) {
@@ -263,11 +515,11 @@ function populateSelect() {
   const cats = [...groups.keys()].sort((a, b) => {
     const ia = GROUP_ORDER.indexOf(a) === -1 ? 999 : GROUP_ORDER.indexOf(a);
     const ib = GROUP_ORDER.indexOf(b) === -1 ? 999 : GROUP_ORDER.indexOf(b);
-    return ia - ib || a.localeCompare(b, "zh");
+    return ia - ib;
   });
   for (const cat of cats) {
     const og = document.createElement("optgroup");
-    og.label = cat;
+    og.label = t("doc_label_" + cat);
     for (const name of groups.get(cat)) {
       const opt = document.createElement("option");
       opt.value = name;
@@ -276,6 +528,13 @@ function populateSelect() {
     }
     selectEl.appendChild(og);
   }
+  if (prevValue && docs.includes(prevValue)) {
+    selectEl.value = prevValue;
+  }
+}
+
+function renderDocCategories() {
+  populateSelect();
 }
 
 function pickRandom() {
@@ -320,7 +579,7 @@ async function loadDoc(name) {
   } catch (e) {
     hideLoading();
     statusEl.classList.remove("done");
-    statusEl.textContent = `加载「${name}」失败，请重试或换一篇。`;
+    statusEl.textContent = t("load_doc_failed", { name });
     console.error("loadDoc failed:", e);
   }
 }
@@ -429,7 +688,7 @@ function applyZenMode() {
     inputEl.classList.add("zen-hidden");
     inputEl.value = "";
     prevTypedLen = 0;
-    statusEl.textContent = "禅定模式：专注输入，无法退格，错误将保留。按 Esc 退出。";
+    statusEl.textContent = t("zen_hint");
     statusEl.classList.remove("done");
   } else {
     passageEl.classList.remove("zen");
@@ -445,14 +704,14 @@ function toggleZenMode() {
   if (zenMode) {
     zenMode = false;
   } else {
-    if (inputEl.value.length > 0 && !confirm("切换到禅定模式将重置当前进度，确认？")) return;
+    if (inputEl.value.length > 0 && !confirm(t("zen_confirm"))) return;
     zenMode = true;
     resetInput();
   }
   localStorage.setItem(K_ZEN, zenMode ? "1" : "0");
   applyZenMode();
   const btn = document.getElementById("zenBtn");
-  if (btn) btn.textContent = zenMode ? "退出禅定" : "禅定模式";
+  if (btn) btn.textContent = zenMode ? t("zen_exit") : t("zen_mode");
 }
 
 /* ============== 完成练习 ============== */
@@ -472,8 +731,8 @@ function finishExercise(timeUp = false) {
   statusEl.classList.add("done");
 
   const unitLabel = unit.toUpperCase();
-  const title = timeUp ? "时间到！" : "完成！";
-  statusEl.textContent = `${title}准确率 ${acc}% · ${speed} ${unitLabel} · 错误 ${errors} 处`;
+  const title = timeUp ? t("result_timeup") : t("result_done");
+  statusEl.textContent = t("result_status", { title, acc, speed, unit: unitLabel, errors });
 
   showResultCard({ acc, speed, unitLabel, errors, timeUp });
 
@@ -488,10 +747,10 @@ function showResultCard({ acc, speed, unitLabel, errors, timeUp }) {
   if (!card) return;
   card.style.display = "flex";
   card.classList.add("result-show");
-  document.getElementById("resultTitle").textContent = timeUp ? "⏱️ 时间到！" : "🎉 完成！";
-  document.getElementById("resultAcc").textContent = `${acc}%`;
-  document.getElementById("resultSpeed").textContent = `${speed} ${unitLabel}`;
-  document.getElementById("resultErr").textContent = `${errors} 处`;
+  document.getElementById("resultTitle").textContent = timeUp ? t("result_timeup") : t("result_done");
+  document.getElementById("resultAcc").textContent = t("acc_text", { acc });
+  document.getElementById("resultSpeed").textContent = t("result_speed", { speed, unit: unitLabel });
+  document.getElementById("resultErr").textContent = t("result_err", { n: errors });
 }
 
 function hideResultCard() {
@@ -583,7 +842,7 @@ inputEl.addEventListener("keydown", (e) => {
   }
   if (e.key === "Escape") {
     e.preventDefault();
-    if (inputEl.value.length > 0 && !confirm("确认重置当前进度？")) return;
+    if (inputEl.value.length > 0 && !confirm(t("reset_confirm"))) return;
     resetInput();
     hideResultCard();
   } else if (e.key === "Enter" && e.ctrlKey) {
@@ -603,7 +862,7 @@ document.addEventListener("keydown", (e) => {
   }
   if (e.key === "Escape") {
     e.preventDefault();
-    if (inputEl.value.length > 0 && !confirm("退出禅定模式并结束练习？")) return;
+    if (inputEl.value.length > 0 && !confirm(t("zen_exit_confirm"))) return;
     const typed = inputEl.value;
     const { correct, errors } = countStats(typed);
     const acc = typed.length ? Math.round((correct / typed.length) * 100) : 100;
@@ -628,7 +887,7 @@ document.addEventListener("keydown", (e) => {
     passageEl.classList.remove("zen");
     inputEl.classList.remove("zen-hidden");
     const btn = document.getElementById("zenBtn");
-    if (btn) btn.textContent = "禅定模式";
+    if (btn) btn.textContent = t("zen_mode");
     return;
   }
   if (e.key === "Tab" && !e.shiftKey) {
@@ -658,7 +917,7 @@ document.getElementById("newBtn").addEventListener("click", async () => {
 });
 
 document.getElementById("resetBtn").addEventListener("click", () => {
-  if (inputEl.value.length > 0 && !confirm("确认重置当前进度？")) return;
+  if (inputEl.value.length > 0 && !confirm(t("reset_confirm"))) return;
   resetInput();
   hideResultCard();
 });
@@ -766,7 +1025,7 @@ function renderErrorKeys(list) {
   if (!el) return;
   el.replaceChildren();
   if (topErrors.length === 0) {
-    el.textContent = "暂无错误键位数据";
+    el.textContent = t("no_error_data");
     return;
   }
   for (const { pair, count } of topErrors) {
@@ -800,9 +1059,11 @@ function renderProfile() {
   const zenCount = allList.filter(r => r.zen).length;
   const countEl = document.getElementById("filterCount");
   if (countEl) {
-    countEl.textContent = profileFilter === "zen"
-      ? `${zenCount} 条记录`
-      : `共 ${allList.length} 条`;
+    if (profileFilter === "zen") {
+      countEl.textContent = t("filter_count", { n: zenCount });
+    } else {
+      countEl.textContent = t("filter_total", { n: allList.length });
+    }
   }
 
   const listEl = document.getElementById("historyList");
@@ -826,17 +1087,17 @@ function renderProfile() {
 
     const acc = document.createElement("span");
     acc.className = "hi-acc";
-    acc.textContent = `准确率 ${r.acc}%`;
+    acc.textContent = t("acc_text", { acc: r.acc });
 
     const err = document.createElement("span");
     err.className = "hi-err";
-    err.textContent = `错误 ${r.errors}`;
+    err.textContent = t("err_text", { n: r.errors });
 
     // Zen badge
     if (r.zen) {
       const badge = document.createElement("span");
       badge.className = "hi-badge";
-      badge.textContent = "禅";
+      badge.textContent = t("zen_badge");
       item.append(date, doc, badge, speed, acc, err);
     } else {
       item.append(date, doc, speed, acc, err);
@@ -882,7 +1143,7 @@ function renderCharts(list) {
     data: {
       labels,
       datasets: [{
-        label: "速度",
+        label: t("speed"),
         data: speeds,
         borderColor: accent,
         backgroundColor: accent + "22",
@@ -894,9 +1155,8 @@ function renderCharts(list) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
       plugins: {
-        title: { display: true, text: "速度趋势（最近 30 次）", color: ink },
+        title: { display: true, text: t("speed_trend"), color: ink },
         tooltip: {
           callbacks: {
             label(ctx) {
@@ -921,7 +1181,7 @@ function renderCharts(list) {
     data: {
       labels,
       datasets: [{
-        label: "错误字符数",
+        label: t("error_char_count"),
         data: errs,
         backgroundColor: wrong,
         borderRadius: 4,
@@ -930,7 +1190,7 @@ function renderCharts(list) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { title: { display: true, text: "错误字符数（最近 30 次）", color: ink } },
+      plugins: { title: { display: true, text: t("error_trend"), color: ink } },
       scales: {
         x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { color: grid } },
         y: { beginAtZero: true, ticks: { color: muted }, grid: { color: grid } },
@@ -947,7 +1207,7 @@ function renderCharts(list) {
     data: {
       labels,
       datasets: [{
-        label: "准确率",
+        label: t("accuracy"),
         data: accs,
         borderColor: "#1a9c54",
         backgroundColor: "#1a9c5422",
@@ -960,7 +1220,7 @@ function renderCharts(list) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { title: { display: true, text: "准确率趋势（最近 30 次）", color: ink } },
+      plugins: { title: { display: true, text: t("acc_trend"), color: ink } },
       scales: {
         x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { color: grid } },
         y: { min: 0, max: 100, ticks: { color: muted }, grid: { color: grid } },
@@ -970,7 +1230,7 @@ function renderCharts(list) {
 }
 
 document.getElementById("clearHistoryBtn").addEventListener("click", () => {
-  if (!confirm("确认清空全部历史记录？此操作不可撤销。")) return;
+  if (!confirm(t("clear_confirm"))) return;
   saveHistory([]);
   errorKeyPairs = {};
   renderProfile();
@@ -1003,9 +1263,9 @@ document.getElementById("importFileInput").addEventListener("change", async (e) 
     merged.sort((a, b) => a.ts - b.ts);
     saveHistory(merged);
     renderProfile();
-    alert(`已导入，当前共 ${loadHistory().length} 条记录。`);
+    alert(t("import_success", { n: loadHistory().length }));
   } catch {
-    alert("导入失败：请确认文件为有效的 JSON 历史记录。");
+    alert(t("import_fail"));
   }
 });
 
@@ -1077,12 +1337,12 @@ document.querySelectorAll(".filter-tab").forEach(tab => {
     await loadCategoriesConfig();
     await loadDocList();
   } catch (e) {
-    passageEl.textContent = "无法连接服务器，请确认 server.py 正在运行。";
+    passageEl.textContent = t("cannot_connect");
     inputEl.disabled = true;
     return;
   }
   if (docs.length === 0) {
-    passageEl.textContent = "请在 docs 文件夹中放入 .txt 或 .md 文档后刷新页面。";
+    passageEl.textContent = t("no_docs");
     inputEl.disabled = true;
     return;
   }
@@ -1096,7 +1356,7 @@ document.querySelectorAll(".filter-tab").forEach(tab => {
     zenMode = true;
     applyZenMode();
     const zenBtn = document.getElementById("zenBtn");
-    if (zenBtn) zenBtn.textContent = "退出禅定";
+    if (zenBtn) zenBtn.textContent = t("zen_exit");
   }
 
   // Restore profile filter
@@ -1113,4 +1373,16 @@ document.querySelectorAll(".filter-tab").forEach(tab => {
       }
     });
   }
+
+  // Init language
+  const langSelect = document.getElementById("langSelect");
+  if (langSelect) {
+    langSelect.value = currentLang;
+    langSelect.addEventListener("change", () => {
+      currentLang = langSelect.value;
+      localStorage.setItem(K_LANG, currentLang);
+      applyLanguage();
+    });
+  }
+  applyLanguage();
 })();

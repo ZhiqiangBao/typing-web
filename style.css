@@ -159,6 +159,18 @@ body {
 }
 .theme-picker select:focus { outline: none; border-color: var(--accent); }
 
+.lang-picker { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.85rem; }
+.lang-picker select {
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+.lang-picker select:focus { outline: none; border-color: var(--accent); }
+
 /* ============== 视图切换 ============== */
 .view { display: none; }
 .view.active { display: block; animation: fadeIn 0.2s; }
@@ -500,6 +512,7 @@ button.ghost { background: var(--panel); color: var(--ink); border: 1px solid va
   .card { transition: none; }
   .typebox { transition: none; }
   .theme-picker select { transition: none; }
+  .lang-picker select { transition: none; }
   .tab { transition: none; }
   .progress-bar-fill { transition: none; }
   .spinner { animation-duration: 2s; }

@@ -1,3 +1,5 @@
+[English](README.en.md) | 中文
+
 # 打字练习 Typing Web
 
 一个基于原生 HTML / CSS / JavaScript 的打字练习 Web 应用，内置训练档案统计与图表可视化，所有数据保存在本地浏览器中，无需登录、无需后端数据库。
@@ -103,7 +105,8 @@ typing-web/
 ├── vendor/
 │   └── chart.umd.min.js  # Chart.js 本地版本
 ├── test_smoke.py      # 冒烟测试（覆盖静态文件、文档、接口、路径安全等）
-└── README.md
+├── README.md
+└── README.en.md
 ```
 
 ### 添加自定义文章

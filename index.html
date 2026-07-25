@@ -11,29 +11,36 @@
   <main class="card">
     <nav class="topbar">
       <div class="tabs" role="tablist">
-        <button class="tab active" data-view="practice" role="tab" aria-selected="true">练习 Practice</button>
-        <button class="tab" data-view="profile" role="tab" aria-selected="false">档案 Profile</button>
+        <button class="tab active" data-view="practice" role="tab" aria-selected="true" data-i18n="tab_practice">练习 Practice</button>
+        <button class="tab" data-view="profile" role="tab" aria-selected="false" data-i18n="tab_profile">档案 Profile</button>
       </div>
       <div class="topbar-controls">
         <div class="timer-control">
-          <label for="timerSelect">计时</label>
-          <select id="timerSelect" aria-label="计时模式">
-            <option value="0">不限时</option>
-            <option value="15">15秒</option>
-            <option value="30">30秒</option>
-            <option value="60">60秒</option>
+          <label for="timerSelect" data-i18n="timer">计时</label>
+          <select id="timerSelect" aria-label="计时模式" data-i18n-aria="timer_label">
+            <option value="0" data-i18n="no_limit">不限时</option>
+            <option value="15">15s</option>
+            <option value="30">30s</option>
+            <option value="60">60s</option>
           </select>
           <span id="timerDisplay" class="timer-display" style="display:none;"></span>
         </div>
-        <button id="zenBtn" type="button" class="ghost zen-btn">禅定模式</button>
+        <button id="zenBtn" type="button" class="ghost zen-btn" data-i18n="zen_mode">禅定模式</button>
         <div class="theme-picker">
-          <label for="themeSelect">主题</label>
-          <select id="themeSelect" aria-label="选择主题">
-            <option value="auto">跟随系统</option>
-            <option value="blue">浅蓝</option>
-            <option value="dark">深色</option>
-            <option value="beige">米黄</option>
-            <option value="green">青绿</option>
+          <label for="themeSelect" data-i18n="theme">主题</label>
+          <select id="themeSelect" aria-label="选择主题" data-i18n-aria="theme_label">
+            <option value="auto" data-i18n="theme_auto">跟随系统</option>
+            <option value="blue" data-i18n="theme_blue">浅蓝</option>
+            <option value="dark" data-i18n="theme_dark">深色</option>
+            <option value="beige" data-i18n="theme_beige">米黄</option>
+            <option value="green" data-i18n="theme_green">青绿</option>
+          </select>
+        </div>
+        <div class="lang-picker">
+          <label for="langSelect" data-i18n="lang_label">语言</label>
+          <select id="langSelect">
+            <option value="zh" data-i18n="lang_zh">中文</option>
+            <option value="en" data-i18n="lang_en">English</option>
           </select>
         </div>
       </div>
@@ -42,107 +49,108 @@
     <!-- ============== Practice 视图 ============== -->
     <section id="view-practice" class="view active">
       <header class="head">
-        <h1>打字练习</h1>
+        <h1 data-i18n="app_title">打字练习</h1>
         <div class="doc-picker">
-          <label for="docSelect">选择文章</label>
-          <select id="docSelect" aria-label="选择文章"></select>
+          <label for="docSelect" data-i18n="select_doc">选择文章</label>
+          <select id="docSelect" aria-label="选择文章" data-i18n-aria="select_doc"></select>
         </div>
       </header>
 
       <section class="stats" aria-live="polite" aria-atomic="false">
-        <div class="stat"><span id="statProg">0%</span><label>进度</label></div>
-        <div class="stat"><span id="statAcc">100%</span><label>准确率</label></div>
-        <div class="stat"><span id="statWpm">0</span><label id="statSpeedLabel">WPM</label></div>
-        <div class="stat"><span id="statErr">0</span><label>错误</label></div>
+        <div class="stat"><span id="statProg">0%</span><label data-i18n="progress">进度</label></div>
+        <div class="stat"><span id="statAcc">100%</span><label data-i18n="accuracy">准确率</label></div>
+        <div class="stat"><span id="statWpm">0</span><label id="statSpeedLabel" data-i18n="wpm_unit">WPM</label></div>
+        <div class="stat"><span id="statErr">0</span><label data-i18n="errors">错误</label></div>
       </section>
 
       <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
         <div id="progressBar" class="progress-bar-fill" style="width:0%"></div>
       </div>
 
-      <div id="passage" class="passage" aria-label="待输入文本"></div>
+      <div id="passage" class="passage" aria-label="待输入文本" data-i18n-aria="select_doc"></div>
 
       <div id="loadingIndicator" class="loading-indicator" style="display:none;">
         <div class="spinner"></div>
-        <span>加载中...</span>
+        <span data-i18n="loading">加载中...</span>
       </div>
 
       <textarea id="input" class="typebox" rows="4"
         placeholder="在这里输入上面的文本…（一致显示黑色，不一致显示红色）"
+        data-i18n-ph="placeholder"
         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
 
       <div id="status" class="status" role="status" aria-live="polite"></div>
 
       <div id="resultCard" class="result-card" style="display:none;">
         <div class="result-content">
-          <h2 id="resultTitle">🎉 完成！</h2>
+          <h2 id="resultTitle" data-i18n="result_done">🎉 完成！</h2>
           <div class="result-stats">
             <div class="result-stat">
               <span id="resultAcc">100%</span>
-              <label>准确率</label>
+              <label data-i18n="accuracy">准确率</label>
             </div>
             <div class="result-stat">
               <span id="resultSpeed">0 WPM</span>
-              <label>速度</label>
+              <label data-i18n="speed">速度</label>
             </div>
             <div class="result-stat">
-              <span id="resultErr">0 处</span>
-              <label>错误</label>
+              <span id="resultErr">0</span>
+              <label data-i18n="errors">错误</label>
             </div>
           </div>
           <div class="result-actions">
-            <button id="resultAgainBtn" type="button">再来一篇</button>
-            <button id="resultCloseBtn" type="button" class="ghost">关闭</button>
+            <button id="resultAgainBtn" type="button" data-i18n="result_again">再来一篇</button>
+            <button id="resultCloseBtn" type="button" class="ghost" data-i18n="result_close">关闭</button>
           </div>
         </div>
       </div>
 
       <footer class="controls">
-        <button id="newBtn" type="button">换一篇（随机）</button>
-        <button id="resetBtn" type="button" class="ghost">重置</button>
-        <span class="hint">Tab 下一篇 · Esc 重置/退出禅定 · Ctrl+Enter 换篇 · Ctrl+1/2 切换视图</span>
+        <button id="newBtn" type="button" data-i18n="new_doc">换一篇（随机）</button>
+        <button id="resetBtn" type="button" class="ghost" data-i18n="reset">重置</button>
+        <span class="hint" data-i18n="hint">Tab 下一篇 · Esc 重置/退出禅定 · Ctrl+Enter 换篇 · Ctrl+1/2 切换视图</span>
       </footer>
     </section>
 
     <!-- ============== Profile 视图 ============== -->
     <section id="view-profile" class="view">
       <header class="head">
-        <h1>训练档案</h1>
+        <h1 data-i18n="profile_title">训练档案</h1>
         <div class="profile-actions">
-          <button id="exportHistoryBtn" type="button" class="ghost">导出</button>
-          <button id="importHistoryBtn" type="button" class="ghost">导入</button>
+          <button id="exportHistoryBtn" type="button" class="ghost" data-i18n="export">导出</button>
+          <button id="importHistoryBtn" type="button" class="ghost" data-i18n="import">导入</button>
           <input id="importFileInput" type="file" accept=".json,application/json" hidden>
-          <button id="clearHistoryBtn" type="button" class="ghost">清空历史</button>
+          <button id="clearHistoryBtn" type="button" class="ghost" data-i18n="clear_history">清空历史</button>
         </div>
       </header>
 
       <div class="profile-filters" role="tablist" aria-label="数据筛选">
-        <button class="filter-tab active" data-filter="all" role="tab" aria-selected="true">全部</button>
-        <button class="filter-tab" data-filter="zen" role="tab" aria-selected="false">禅定模式</button>
+        <button class="filter-tab active" data-filter="all" role="tab" aria-selected="true" data-i18n="filter_all">全部</button>
+        <button class="filter-tab" data-filter="zen" role="tab" aria-selected="false" data-i18n="filter_zen">禅定模式</button>
         <span id="filterCount" class="filter-count"></span>
       </div>
 
       <section class="stats">
-        <div class="stat"><span id="totalCnt">0</span><label>总训练次数</label></div>
-        <div class="stat"><span id="totalAcc">—</span><label>总正确率</label></div>
-        <div class="stat"><span id="maxWpm">0</span><label>最高 WPM</label></div>
-        <div class="stat"><span id="avgWpm">0</span><label>平均 WPM</label></div>
+        <div class="stat"><span id="totalCnt">0</span><label data-i18n="total_count">总训练次数</label></div>
+        <div class="stat"><span id="totalAcc">—</span><label data-i18n="total_acc">总正确率</label></div>
+        <div class="stat"><span id="maxWpm">0</span><label data-i18n="max_wpm">最高 WPM</label></div>
+        <div class="stat"><span id="avgWpm">0</span><label data-i18n="avg_wpm">平均 WPM</label></div>
       </section>
 
       <section class="stats">
-        <div class="stat"><span id="dayCnt">0</span><label>今日训练</label></div>
-        <div class="stat"><span id="dayAcc">—</span><label>今日正确率</label></div>
-        <div class="stat"><span id="dayMaxWpm">0</span><label>今日最高 WPM</label></div>
-        <div class="stat"><span id="dayAvgWpm">0</span><label>今日平均 WPM</label></div>
+        <div class="stat"><span id="dayCnt">0</span><label data-i18n="today_count">今日训练</label></div>
+        <div class="stat"><span id="dayAcc">—</span><label data-i18n="today_acc">今日正确率</label></div>
+        <div class="stat"><span id="dayMaxWpm">0</span><label data-i18n="today_max">今日最高 WPM</label></div>
+        <div class="stat"><span id="dayAvgWpm">0</span><label data-i18n="today_avg">今日平均 WPM</label></div>
       </section>
 
       <section class="stats">
-        <div class="stat"><span id="streakDays">0</span><label>连续天数</label></div>
+        <div class="stat"><span id="streakDays">0</span><label data-i18n="streak">连续天数</label></div>
         <div class="stat stat-wide">
           <span>
-            <span id="errorKeyList" class="error-key-list">暂无错误键位数据</span>
+            <span id="errorKeyList" class="error-key-list" data-i18n="no_error_data">暂无错误键位数据</span>
           </span>
-          <label>Top 5 易错键</label>
+          <label data-i18n="top_errors">Top 5 易错键</label>
         </div>
       </section>
 
