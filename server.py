@@ -3,6 +3,7 @@ import http.server
 import json
 import os
 import socket
+import urllib.parse
 import webbrowser
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -16,10 +17,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=ROOT, **kwargs)
 
     def do_GET(self):
-        if self.path.split("?", 1)[0] == "/api/docs":
+        path = self.path.split("?", 1)[0]
+        if path == "/api/docs":
             self.send_docs_list()
             return
+        if path.startswith("/docs/"):
+            name = path[len("/docs/"):]
+            name = urllib.parse.unquote(name)
+            if not self._is_safe_doc(name):
+                self.send_error(403, "Forbidden")
+                return
         super().do_GET()
+
+    def _is_safe_doc(self, name):
+        if not name or "\x00" in name:
+            return False
+        if "/" in name or "\\" in name or ".." in name:
+            return False
+        allowed = DOC_EXTS + (".json",)
+        if not name.lower().endswith(allowed):
+            return False
+        full = os.path.abspath(os.path.join(DOCS_DIR, name))
+        return full.startswith(os.path.abspath(DOCS_DIR) + os.sep)
 
     def send_docs_list(self):
         files = []
