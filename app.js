@@ -24,6 +24,9 @@ let timerInterval = null;
 let timerRemaining = 0;
 let zenMode = false;
 let errorKeyPairs = {}; // track wrong->correct key pairs
+let zenErrorCount = 0; // zen mode: number of positions with errors
+let zenErrorPositions = new Set(); // zen mode: positions that had errors
+let zenErrorPairs = []; // zen mode: wrong→correct pairs (one per position)
 let isComposing = false; // IME composition in progress
 
 /* ============== localStorage 键 ============== */
@@ -54,7 +57,7 @@ const I18N = {
     theme_green: "青绿",
     zen_mode: "禅定模式",
     zen_exit: "退出禅定",
-    zen_hint: "禅定模式：专注输入，无法退格，错误将保留。按 Esc 退出。",
+    zen_hint: "禅定模式：输入错误会记录并阻止前进，必须输入正确才能继续。按 Esc 退出。",
     zen_confirm: "切换到禅定模式将重置当前进度，确认？",
     zen_exit_confirm: "退出禅定模式并结束练习？",
     zen_end: "禅定结束",
@@ -153,7 +156,7 @@ const I18N = {
     theme_green: "Green",
     zen_mode: "Zen Mode",
     zen_exit: "Exit Zen",
-    zen_hint: "Zen mode: Focus on typing. Backspace is disabled. Errors are kept. Press Esc to exit.",
+    zen_hint: "Zen mode: Wrong input is recorded and blocks advance. Type correctly to continue. Press Esc to exit.",
     zen_confirm: "Switching to Zen mode will reset current progress. Confirm?",
     zen_exit_confirm: "Exit Zen mode and end this exercise?",
     zen_end: "Zen ended",
@@ -334,10 +337,16 @@ function recordResult({ speed, speedUnit, acc, errors, typedLen, correctLen, zen
 
   // Collect error key pairs
   const wrongChars = [];
-  for (let i = 0; i < typedLen && i < target.length; i++) {
-    if (typedLen > i && typed[i] !== target[i]) {
-      const pair = `${typed[i]}→${target[i]}`;
-      wrongChars.push(pair);
+  if (zen) {
+    // Zen mode: typed only contains correct chars, use zenErrorPairs
+    wrongChars.push(...zenErrorPairs);
+  } else {
+    const typedVal = inputEl.value;
+    for (let i = 0; i < typedLen && i < target.length; i++) {
+      if (typedVal[i] !== target[i]) {
+        const pair = `${typedVal[i]}→${target[i]}`;
+        wrongChars.push(pair);
+      }
     }
   }
   for (const pair of wrongChars) {
@@ -637,6 +646,9 @@ function resetInput() {
   inputEl.disabled = false;
   startTime = null;
   prevTypedLen = 0;
+  zenErrorCount = 0;
+  zenErrorPositions = new Set();
+  zenErrorPairs = [];
   statusEl.textContent = "";
   statusEl.classList.remove("done");
   lastSavedKey = null;
@@ -688,6 +700,9 @@ function applyZenMode() {
     inputEl.classList.add("zen-hidden");
     inputEl.value = "";
     prevTypedLen = 0;
+    zenErrorCount = 0;
+    zenErrorPositions = new Set();
+    zenErrorPairs = [];
     statusEl.textContent = t("zen_hint");
     statusEl.classList.remove("done");
   } else {
@@ -717,8 +732,10 @@ function toggleZenMode() {
 /* ============== 完成练习 ============== */
 function finishExercise(timeUp = false) {
   const typed = inputEl.value;
-  const { correct, errors } = countStats(typed);
-  const acc = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+  const { correct, errors: baseErrors } = countStats(typed);
+  const errors = baseErrors + (zenMode ? zenErrorCount : 0);
+  const totalKeystrokes = typed.length + (zenMode ? zenErrorCount : 0);
+  const acc = totalKeystrokes ? Math.round((correct / totalKeystrokes) * 100) : 100;
   const unit = speedUnitForDoc(currentDoc);
   let speed = 0;
   if (startTime) {
@@ -762,9 +779,21 @@ function hideResultCard() {
 
 /* ============== 实时更新 + 完成时记录 ============== */
 function update(fullRecount = false) {
-  const typed = inputEl.value;
-  const typedLen = typed.length;
+  let typed = inputEl.value;
+  let typedLen = typed.length;
   const spans = passageEl.children;
+
+  // Zen 模式：先截断错误输入，再渲染 spans（防止光标跳到下一字符）
+  if (zenMode && typedLen > prevTypedLen) {
+    for (let i = prevTypedLen; i < typedLen; i++) {
+      if (typed[i] !== target[i]) {
+        inputEl.value = typed.substring(0, i);
+        typed = inputEl.value;
+        typedLen = typed.length;
+        break;
+      }
+    }
+  }
 
   if (fullRecount || typedLen < prevTypedLen) {
     for (let i = 0; i < spans.length; i++) updateSpanAt(i, typed);
@@ -776,9 +805,21 @@ function update(fullRecount = false) {
   }
   prevTypedLen = typedLen;
 
-  const { correct, errors } = countStats(typed);
-  const acc = typedLen ? Math.round((correct / typedLen) * 100) : 100;
-  const prog = target.length ? Math.round((Math.min(typedLen, target.length) / target.length) * 100) : 0;
+  // Zen 模式：强制所有曾出错的位置保持红色（即使已打对前进后也不恢复）
+  if (zenMode) {
+    for (const pos of zenErrorPositions) {
+      const span = passageEl.children[pos];
+      if (span) span.className = "ch wrong";
+    }
+  }
+
+  const finalTyped = inputEl.value;
+  const finalLen = finalTyped.length;
+  const { correct, errors: baseErrors } = countStats(finalTyped);
+  const errors = baseErrors + (zenMode ? zenErrorCount : 0);
+  const totalKeystrokes = finalLen + (zenMode ? zenErrorCount : 0);
+  const acc = totalKeystrokes ? Math.round((correct / totalKeystrokes) * 100) : 100;
+  const prog = target.length ? Math.round((Math.min(finalLen, target.length) / target.length) * 100) : 0;
   const unit = speedUnitForDoc(currentDoc);
   let speed = 0;
   if (startTime) {
@@ -798,12 +839,12 @@ function update(fullRecount = false) {
   const cur = passageEl.querySelector(".current");
   if (cur) {
     cur.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    if (!zenMode && typedLen > 0 && window.innerWidth <= 720) {
+    if (!zenMode && finalLen > 0 && window.innerWidth <= 720) {
       inputEl.scrollIntoView({ block: "center", behavior: "smooth" });
     }
   }
 
-  if (typedLen >= target.length && target.length > 0) {
+  if (finalLen >= target.length && target.length > 0) {
     finishExercise(false);
   }
 }
@@ -814,11 +855,34 @@ inputEl.addEventListener("compositionstart", () => {
 
 inputEl.addEventListener("compositionend", () => {
   isComposing = false;
+  let zenWrongPos = -1;
+  // Zen mode: validate IME-composed characters
+  if (zenMode) {
+    const typed = inputEl.value;
+    for (let i = prevTypedLen; i < typed.length; i++) {
+      if (typed[i] !== target[i]) {
+        inputEl.value = typed.substring(0, i);
+        if (!zenErrorPositions.has(i)) {
+          zenErrorPositions.add(i);
+          zenErrorCount++;
+          zenErrorPairs.push(`${typed[i]}→${target[i]}`);
+        }
+        zenWrongPos = i;
+        break;
+      }
+    }
+  }
   if (!startTime && inputEl.value.length > 0) {
     startTime = Date.now();
     if (timerMode > 0) startTimer(timerMode);
   }
   update(true);
+  // update(true) 后标记错误 span（避免被 fullRecount 覆盖）
+  if (zenWrongPos >= 0) {
+    const span = passageEl.children[zenWrongPos];
+    if (span) span.className = "ch wrong";
+    prevTypedLen = zenWrongPos;
+  }
 });
 
 inputEl.addEventListener("input", () => {
@@ -852,7 +916,7 @@ inputEl.addEventListener("keydown", (e) => {
   }
 });
 
-/* Zen 模式按键拦截：捕获阶段阻断 Backspace，Esc 退出 */
+/* Zen 模式按键拦截：捕获阶段阻断 Backspace / 错误字符，Esc 退出 */
 document.addEventListener("keydown", (e) => {
   if (!zenMode) return;
   if (e.key === "Backspace") {
@@ -864,8 +928,10 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     if (inputEl.value.length > 0 && !confirm(t("zen_exit_confirm"))) return;
     const typed = inputEl.value;
-    const { correct, errors } = countStats(typed);
-    const acc = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+    const { correct } = countStats(typed);
+    const errors = zenErrorCount;
+    const totalKeystrokes = typed.length + zenErrorCount;
+    const acc = totalKeystrokes ? Math.round((correct / totalKeystrokes) * 100) : 100;
     const unit = speedUnitForDoc(currentDoc);
     let speed = 0;
     if (startTime) {
@@ -894,6 +960,23 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     const next = pickNextDoc();
     if (next) loadDoc(next);
+    return;
+  }
+  // Zen mode: 可打印字符错误时，标记 span 为 wrong（不阻止输入，由 update() 截断）
+  if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !isComposing) {
+    const typed = inputEl.value;
+    const pos = typed.length;
+    if (pos < target.length && e.key !== target[pos]) {
+      // 每个位置只记录一次错误
+      if (!zenErrorPositions.has(pos)) {
+        zenErrorPositions.add(pos);
+        zenErrorCount++;
+        zenErrorPairs.push(`${e.key}→${target[pos]}`);
+      }
+      // 标记当前位置为错误（永久红色）
+      const span = passageEl.children[pos];
+      if (span) span.className = "ch wrong";
+    }
   }
 }, true);
 
