@@ -170,6 +170,49 @@ body {
 
 .profile-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
+.profile-filters {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 10px 0 18px;
+  padding: 4px;
+  background: var(--panel);
+  border-radius: 10px;
+}
+.filter-tab {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  padding: 8px 18px;
+  border-radius: 7px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-tab:hover { color: var(--ink); }
+.filter-tab.active { background: var(--accent); color: #fff; }
+.filter-count {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: var(--muted);
+  padding-right: 10px;
+}
+
+.hi-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  margin: 0 4px;
+}
+.history-item.hi-zen {
+  border-left: 3px solid var(--accent);
+}
+
 .doc-picker { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.9rem; }
 .doc-picker select {
   font-size: 0.9rem;
@@ -251,12 +294,34 @@ body {
   box-shadow: inset 0 -2px 0 var(--accent);
 }
 
-/* Zen mode: hide untyped text, show only current character and recently typed */
-.passage.zen .pending { visibility: hidden; }
+/* Zen mode: show all characters, no hiding, hide input box */
+.passage.zen .pending { color: var(--pending); visibility: visible; opacity: 0.5; }
 .passage.zen .current {
   background: color-mix(in srgb, var(--accent) 30%, transparent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent), inset 0 -2px 0 var(--accent);
   font-weight: 700;
+}
+.typebox.zen-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  resize: none;
+}
+.typebox.zen-hidden:focus {
+  outline: none;
+}
+
+/* Ensure textarea in zen mode is not focusable visually but still receives input */
+.passage.zen + .typebox.zen-hidden {
+  pointer-events: none;
 }
 
 .typebox {

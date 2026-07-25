@@ -24,6 +24,7 @@ let timerInterval = null;
 let timerRemaining = 0;
 let zenMode = false;
 let errorKeyPairs = {}; // track wrong->correct key pairs
+let isComposing = false; // IME composition in progress
 
 /* ============== localStorage 键 ============== */
 const K_HISTORY = "typing_history";
@@ -31,6 +32,7 @@ const K_THEME = "typing_theme";
 const K_LAST_DOC = "typing_last_doc";
 const K_TIMER = "typing_timer";
 const K_ZEN = "typing_zen";
+const K_PROFILE_FILTER = "typing_profile_filter";
 const MAX_HISTORY = 500;
 
 /* ============== 工具 ============== */
@@ -78,7 +80,7 @@ function yesterdayStr() {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-function recordResult({ speed, speedUnit, acc, errors, typedLen, correctLen }) {
+function recordResult({ speed, speedUnit, acc, errors, typedLen, correctLen, zen }) {
   const list = loadHistory();
   const key = `${currentDoc}-${Date.now()}`;
   if (key === lastSavedKey) return;
@@ -108,6 +110,7 @@ function recordResult({ speed, speedUnit, acc, errors, typedLen, correctLen }) {
     typed: typedLen,
     correct: correctLen,
     errorPairs: wrongChars,
+    zen: !!zen,
   });
   saveHistory(list);
 }
@@ -331,7 +334,8 @@ function renderPassage() {
     frag.appendChild(span);
   }
   passageEl.replaceChildren(frag);
-  applyZenMode();
+  passageEl.classList.toggle("zen", zenMode);
+  inputEl.classList.toggle("zen-hidden", zenMode);
 }
 
 function setSpanState(span, state) {
@@ -414,13 +418,29 @@ function setTimerMode(seconds) {
 function applyZenMode() {
   if (zenMode) {
     passageEl.classList.add("zen");
+    inputEl.classList.add("zen-hidden");
+    inputEl.value = "";
+    prevTypedLen = 0;
+    statusEl.textContent = "禅定模式：专注输入，无法退格，错误将保留。按 Esc 退出。";
+    statusEl.classList.remove("done");
   } else {
     passageEl.classList.remove("zen");
+    inputEl.classList.remove("zen-hidden");
+    inputEl.value = "";
+    prevTypedLen = 0;
+    statusEl.textContent = "";
+    inputEl.focus();
   }
 }
 
 function toggleZenMode() {
-  zenMode = !zenMode;
+  if (zenMode) {
+    zenMode = false;
+  } else {
+    if (inputEl.value.length > 0 && !confirm("切换到禅定模式将重置当前进度，确认？")) return;
+    zenMode = true;
+    resetInput();
+  }
   localStorage.setItem(K_ZEN, zenMode ? "1" : "0");
   applyZenMode();
   const btn = document.getElementById("zenBtn");
@@ -450,7 +470,7 @@ function finishExercise(timeUp = false) {
   showResultCard({ acc, speed, unitLabel, errors, timeUp });
 
   if (!lastSavedKey) {
-    recordResult({ speed, speedUnit: unit, acc, errors, typedLen: typed.length, correctLen: correct });
+    recordResult({ speed, speedUnit: unit, acc, errors, typedLen: typed.length, correctLen: correct, zen: zenMode });
     if (currentView === "profile") renderProfile();
   }
 }
@@ -511,8 +531,7 @@ function update(fullRecount = false) {
   const cur = passageEl.querySelector(".current");
   if (cur) {
     cur.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    // Mobile: scroll input into view when typing
-    if (typedLen > 0 && window.innerWidth <= 720) {
+    if (!zenMode && typedLen > 0 && window.innerWidth <= 720) {
       inputEl.scrollIntoView({ block: "center", behavior: "smooth" });
     }
   }
@@ -522,7 +541,21 @@ function update(fullRecount = false) {
   }
 }
 
+inputEl.addEventListener("compositionstart", () => {
+  isComposing = true;
+});
+
+inputEl.addEventListener("compositionend", () => {
+  isComposing = false;
+  if (!startTime && inputEl.value.length > 0) {
+    startTime = Date.now();
+    if (timerMode > 0) startTimer(timerMode);
+  }
+  update(true);
+});
+
 inputEl.addEventListener("input", () => {
+  if (isComposing) return;
   if (!startTime && inputEl.value.length > 0) {
     startTime = Date.now();
     if (timerMode > 0) startTimer(timerMode);
@@ -533,7 +566,7 @@ inputEl.addEventListener("input", () => {
 inputEl.addEventListener("paste", (e) => e.preventDefault());
 
 inputEl.addEventListener("keydown", (e) => {
-  // Tab = switch to next article
+  if (zenMode) return;
   if (e.key === "Tab" && !e.shiftKey) {
     e.preventDefault();
     const next = pickNextDoc();
@@ -551,6 +584,51 @@ inputEl.addEventListener("keydown", (e) => {
     if (next) loadDoc(next);
   }
 });
+
+/* Zen 模式按键拦截：捕获阶段阻断 Backspace，Esc 退出 */
+document.addEventListener("keydown", (e) => {
+  if (!zenMode) return;
+  if (e.key === "Backspace") {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+  if (e.key === "Escape") {
+    e.preventDefault();
+    if (inputEl.value.length > 0 && !confirm("退出禅定模式并结束练习？")) return;
+    const typed = inputEl.value;
+    const { correct, errors } = countStats(typed);
+    const acc = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+    const unit = speedUnitForDoc(currentDoc);
+    let speed = 0;
+    if (startTime) {
+      const mins = (Date.now() - startTime) / 60000;
+      speed = calcSpeed(correct, mins, unit);
+    }
+    const unitLabel = unit.toUpperCase();
+    inputEl.disabled = true;
+    stopTimer();
+    statusEl.classList.add("done");
+    statusEl.textContent = `禅定结束 · 准确率 ${acc}% · ${speed} ${unitLabel} · 错误 ${errors} 处`;
+    showResultCard({ acc, speed, unitLabel, errors, timeUp: false });
+    if (!lastSavedKey) {
+      recordResult({ speed, speedUnit: unit, acc, errors, typedLen: typed.length, correctLen: correct, zen: true });
+      if (currentView === "profile") renderProfile();
+    }
+    zenMode = false;
+    localStorage.setItem(K_ZEN, "0");
+    passageEl.classList.remove("zen");
+    inputEl.classList.remove("zen-hidden");
+    const btn = document.getElementById("zenBtn");
+    if (btn) btn.textContent = "禅定模式";
+    return;
+  }
+  if (e.key === "Tab" && !e.shiftKey) {
+    e.preventDefault();
+    const next = pickNextDoc();
+    if (next) loadDoc(next);
+  }
+}, true);
 
 // Ctrl+1 / Ctrl+2 to switch views
 document.addEventListener("keydown", (e) => {
@@ -627,6 +705,7 @@ document.querySelectorAll(".tab").forEach(b => {
 let wpmChart = null;
 let errChart = null;
 let accChart = null;
+let profileFilter = "all"; // "all" | "zen"
 
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -697,18 +776,33 @@ function renderErrorKeys(list) {
   }
 }
 
+function filterList(list) {
+  if (profileFilter === "zen") return list.filter(r => r.zen);
+  return list;
+}
+
 function renderProfile() {
-  const list = loadHistory();
+  const allList = loadHistory();
+  const list = filterList(allList);
   const s = computeStats(list);
   renderProfileStats(s);
   renderErrorKeys(list);
+
+  // Update filter count
+  const zenCount = allList.filter(r => r.zen).length;
+  const countEl = document.getElementById("filterCount");
+  if (countEl) {
+    countEl.textContent = profileFilter === "zen"
+      ? `${zenCount} 条记录`
+      : `共 ${allList.length} 条`;
+  }
 
   const listEl = document.getElementById("historyList");
   const recent = list.slice(-30).reverse();
   listEl.replaceChildren();
   for (const r of recent) {
     const item = document.createElement("div");
-    item.className = "history-item";
+    item.className = "history-item" + (r.zen ? " hi-zen" : "");
 
     const date = document.createElement("span");
     date.className = "hi-date";
@@ -730,6 +824,16 @@ function renderProfile() {
     err.className = "hi-err";
     err.textContent = `错误 ${r.errors}`;
 
+    // Zen badge
+    if (r.zen) {
+      const badge = document.createElement("span");
+      badge.className = "hi-badge";
+      badge.textContent = "禅";
+      item.append(date, doc, badge, speed, acc, err);
+    } else {
+      item.append(date, doc, speed, acc, err);
+    }
+
     // Click to revisit
     item.style.cursor = "pointer";
     item.addEventListener("click", () => {
@@ -739,7 +843,6 @@ function renderProfile() {
       }
     });
 
-    item.append(date, doc, speed, acc, err);
     listEl.appendChild(item);
   }
 
@@ -942,7 +1045,22 @@ themeSelect.addEventListener("change", () => {
   const v = themeSelect.value;
   applyTheme(v);
   localStorage.setItem(K_THEME, v);
-  if (currentView === "profile") renderCharts(loadHistory());
+  if (currentView === "profile") renderProfile();
+});
+
+// Profile filter tabs
+document.querySelectorAll(".filter-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".filter-tab").forEach(t => {
+      t.classList.remove("active");
+      t.setAttribute("aria-selected", "false");
+    });
+    tab.classList.add("active");
+    tab.setAttribute("aria-selected", "true");
+    profileFilter = tab.dataset.filter;
+    localStorage.setItem(K_PROFILE_FILTER, profileFilter);
+    renderProfile();
+  });
 });
 
 /* ============== 初始化 ============== */
@@ -971,5 +1089,20 @@ themeSelect.addEventListener("change", () => {
     applyZenMode();
     const zenBtn = document.getElementById("zenBtn");
     if (zenBtn) zenBtn.textContent = "退出禅定";
+  }
+
+  // Restore profile filter
+  const savedFilter = localStorage.getItem(K_PROFILE_FILTER);
+  if (savedFilter === "zen") {
+    profileFilter = "zen";
+    document.querySelectorAll(".filter-tab").forEach(t => {
+      if (t.dataset.filter === "zen") {
+        t.classList.add("active");
+        t.setAttribute("aria-selected", "true");
+      } else {
+        t.classList.remove("active");
+        t.setAttribute("aria-selected", "false");
+      }
+    });
   }
 })();

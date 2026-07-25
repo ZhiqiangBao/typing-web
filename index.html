@@ -100,7 +100,7 @@
       <footer class="controls">
         <button id="newBtn" type="button">换一篇（随机）</button>
         <button id="resetBtn" type="button" class="ghost">重置</button>
-        <span class="hint">Tab 下一篇 · Esc 重置 · Ctrl+Enter 换篇 · Ctrl+1/2 切换视图</span>
+        <span class="hint">Tab 下一篇 · Esc 重置/退出禅定 · Ctrl+Enter 换篇 · Ctrl+1/2 切换视图</span>
       </footer>
     </section>
 
@@ -115,6 +115,12 @@
           <button id="clearHistoryBtn" type="button" class="ghost">清空历史</button>
         </div>
       </header>
+
+      <div class="profile-filters" role="tablist" aria-label="数据筛选">
+        <button class="filter-tab active" data-filter="all" role="tab" aria-selected="true">全部</button>
+        <button class="filter-tab" data-filter="zen" role="tab" aria-selected="false">禅定模式</button>
+        <span id="filterCount" class="filter-count"></span>
+      </div>
 
       <section class="stats">
         <div class="stat"><span id="totalCnt">0</span><label>总训练次数</label></div>
