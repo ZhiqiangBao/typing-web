@@ -1,0 +1,35 @@
+{
+  "prefixes": [
+    { "prefix": "lolita_zh", "category": "洛丽塔 Lolita（中文）" },
+    { "prefix": "lolita_en", "category": "洛丽塔 Lolita（英文）" },
+    { "prefix": "lolita", "category": "洛丽塔 Lolita" },
+
+    { "prefix": "proust_swann_zh", "category": "追忆·斯万之恋（中文）" },
+    { "prefix": "proust_swann_en", "category": "追忆·斯万之恋（英文）" },
+    { "prefix": "proust_ombre_zh", "category": "追忆·在少女们身旁（中文）" },
+    { "prefix": "proust_ombre_en", "category": "追忆·在少女们身旁（英文）" },
+    { "prefix": "proust_zh", "category": "追忆似水年华（中文）" },
+    { "prefix": "proust_en", "category": "追忆似水年华（英文）" },
+    { "prefix": "proust", "category": "追忆似水年华" },
+
+    { "prefix": "solitude_en", "category": "百年孤独（英文）" },
+    { "prefix": "solitude_zh", "category": "百年孤独（中文）" },
+    { "prefix": "solitude", "category": "百年孤独" },
+
+    { "prefix": "code_", "category": "代码 / 符号" },
+    { "prefix": "python_code", "category": "代码 / 符号" },
+    { "prefix": "javascript_code", "category": "代码 / 符号" },
+    { "prefix": "sql_query", "category": "代码 / 符号" },
+    { "prefix": "numbers_symbols", "category": "代码 / 符号" },
+
+    { "prefix": "tang_poems", "category": "中文诗文" },
+    { "prefix": "chinese", "category": "中文诗文" },
+    { "prefix": "science_light", "category": "中文诗文" },
+
+    { "prefix": "english_story", "category": "英文练习" },
+    { "prefix": "proverbs", "category": "英文练习" },
+    { "prefix": "pangrams", "category": "英文练习" },
+    { "prefix": "quotes", "category": "英文练习" },
+    { "prefix": "tech_gpu", "category": "英文练习" }
+  ]
+}
