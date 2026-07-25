@@ -188,8 +188,16 @@ function getTopErrorKeys(list, topN = 5) {
 
 /* ============== 文档列表 ============== */
 async function loadDocList() {
-  const res = await fetch("/api/docs", { cache: "no-store" });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  try {
+    const res = await fetch("/api/docs", { cache: "no-store" });
+    if (res.ok) {
+      docs = await res.json();
+      return;
+    }
+  } catch {}
+  // Fallback: static manifest for GitHub Pages / static hosting
+  const res = await fetch("docs/manifest.json", { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to load doc list: HTTP ${res.status}`);
   docs = await res.json();
 }
 
@@ -197,7 +205,7 @@ async function loadDocList() {
 let categoriesConfig = null;
 async function loadCategoriesConfig() {
   try {
-    const res = await fetch("/docs/categories.json", { cache: "no-store" });
+    const res = await fetch("docs/categories.json", { cache: "no-store" });
     if (res.ok) categoriesConfig = await res.json();
   } catch {
     categoriesConfig = null;
@@ -296,7 +304,7 @@ function pickInitialDoc() {
 async function loadDoc(name) {
   showLoading(true);
   try {
-    const res = await fetch("/docs/" + encodeURIComponent(name), { cache: "no-store" });
+    const res = await fetch("docs/" + encodeURIComponent(name), { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     let text = await res.text();
     text = text.replace(/\r\n/g, "\n").replace(/\s+$/g, "");
