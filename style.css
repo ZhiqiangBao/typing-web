@@ -110,6 +110,43 @@ body {
 .tab:hover { color: var(--ink); background: var(--panel); }
 .tab.active { background: var(--accent); color: #fff; }
 
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.timer-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.timer-control select {
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+.timer-control select:focus { outline: none; border-color: var(--accent); }
+.timer-display {
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  min-width: 28px;
+  text-align: right;
+}
+
+.zen-btn {
+  font-size: 0.85rem;
+  padding: 6px 12px;
+}
+
 .theme-picker { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.85rem; }
 .theme-picker select {
   font-size: 0.85rem;
@@ -142,7 +179,7 @@ body {
   background: var(--card);
   color: var(--ink);
   cursor: pointer;
-  max-width: 260px;
+  max-width: min(100%, 320px);
 }
 .doc-picker select:focus { outline: none; border-color: var(--accent); }
 
@@ -161,6 +198,33 @@ body {
 }
 .stat span { display: block; font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
 .stat label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.stat-wide { grid-column: span 3; text-align: left; padding: 12px 16px; }
+.error-key-list { font-size: 0.85rem; color: var(--ink); font-weight: 500; }
+.error-key-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.error-key-item:last-child { border-bottom: none; }
+.ek-key { font-family: monospace; color: var(--ink); }
+.ek-count { color: var(--muted); font-size: 0.8rem; }
+
+/* ============== 进度条 ============== */
+.progress-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 8px 0 4px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.15s ease;
+}
 
 /* ============== 练习区 ============== */
 .passage {
@@ -176,6 +240,7 @@ body {
   max-height: 320px;
   overflow-y: auto;
   user-select: none;
+  position: relative;
 }
 .passage .ch { border-radius: 3px; }
 .passage .pending { color: var(--pending); }
@@ -184,6 +249,14 @@ body {
 .passage .current {
   background: color-mix(in srgb, var(--accent) 16%, transparent);
   box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* Zen mode: hide untyped text, show only current character and recently typed */
+.passage.zen .pending { visibility: hidden; }
+.passage.zen .current {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent), inset 0 -2px 0 var(--accent);
+  font-weight: 700;
 }
 
 .typebox {
@@ -206,6 +279,75 @@ body {
 .status { min-height: 24px; margin-top: 12px; font-size: 0.95rem; color: var(--muted); }
 .status.done { color: #1a9c54; font-weight: 600; }
 [data-theme="dark"] .status.done { color: #5fd98a; }
+
+/* ============== 加载指示器 ============== */
+.loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  background: var(--panel);
+  padding: 12px 20px;
+  border-radius: 10px;
+  z-index: 10;
+}
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============== 结果卡片 ============== */
+.result-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  min-width: 320px;
+  text-align: center;
+}
+.result-card.result-show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+.result-card h2 { margin: 0 0 20px; font-size: 1.5rem; }
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+.result-stat span {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.result-stat label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.result-actions { display: flex; gap: 12px; justify-content: center; }
 
 .controls { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
 button {
@@ -230,9 +372,15 @@ button.ghost { background: var(--panel); color: var(--ink); border: 1px solid va
   gap: 16px;
   margin: 18px 0;
 }
+.charts-3col { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 900px) {
+  .charts-3col { grid-template-columns: 1fr 1fr; }
+}
 @media (max-width: 720px) {
   .charts { grid-template-columns: 1fr; }
+  .charts-3col { grid-template-columns: 1fr; }
   .stats { grid-template-columns: repeat(2, 1fr); }
+  .stat-wide { grid-column: span 2; }
   .history-item {
     grid-template-columns: 1fr 1fr;
     gap: 6px 12px;
@@ -271,9 +419,24 @@ button.ghost { background: var(--panel); color: var(--ink); border: 1px solid va
   border-radius: 10px;
   margin-bottom: 8px;
   font-size: 0.88rem;
+  transition: background 0.15s;
 }
+.history-item:hover { background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
 .history-item .hi-date { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .history-item .hi-doc { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .history-item .hi-wpm { font-weight: 700; color: var(--accent); }
 .history-item .hi-acc { color: var(--muted); }
 .history-item .hi-err { color: var(--wrong); }
+
+/* ============== prefers-reduced-motion ============== */
+@media (prefers-reduced-motion: reduce) {
+  .view.active { animation: none; }
+  body { transition: none; }
+  .card { transition: none; }
+  .typebox { transition: none; }
+  .theme-picker select { transition: none; }
+  .tab { transition: none; }
+  .progress-bar-fill { transition: none; }
+  .spinner { animation-duration: 2s; }
+  @keyframes fadeIn { from { opacity: 1; } to { opacity: 1; } }
+}

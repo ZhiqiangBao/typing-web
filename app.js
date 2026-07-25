@@ -19,11 +19,18 @@ let startTime = null;
 let lastSavedKey = null;
 let prevTypedLen = 0;
 let isChinese = false;
+let timerMode = 0; // 0 = no timer, 15/30/60 = seconds
+let timerInterval = null;
+let timerRemaining = 0;
+let zenMode = false;
+let errorKeyPairs = {}; // track wrong->correct key pairs
 
 /* ============== localStorage 键 ============== */
 const K_HISTORY = "typing_history";
 const K_THEME = "typing_theme";
 const K_LAST_DOC = "typing_last_doc";
+const K_TIMER = "typing_timer";
+const K_ZEN = "typing_zen";
 const MAX_HISTORY = 500;
 
 /* ============== 工具 ============== */
@@ -64,11 +71,31 @@ function todayStr() {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
+function yesterdayStr() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 function recordResult({ speed, speedUnit, acc, errors, typedLen, correctLen }) {
   const list = loadHistory();
   const key = `${currentDoc}-${Date.now()}`;
   if (key === lastSavedKey) return;
   lastSavedKey = key;
+
+  // Collect error key pairs
+  const wrongChars = [];
+  for (let i = 0; i < typedLen && i < target.length; i++) {
+    if (typedLen > i && typed[i] !== target[i]) {
+      const pair = `${typed[i]}→${target[i]}`;
+      wrongChars.push(pair);
+    }
+  }
+  for (const pair of wrongChars) {
+    errorKeyPairs[pair] = (errorKeyPairs[pair] || 0) + 1;
+  }
+
   list.push({
     ts: Date.now(),
     day: todayStr(),
@@ -80,6 +107,7 @@ function recordResult({ speed, speedUnit, acc, errors, typedLen, correctLen }) {
     errors,
     typed: typedLen,
     correct: correctLen,
+    errorPairs: wrongChars,
   });
   saveHistory(list);
 }
@@ -121,11 +149,56 @@ function computeStats(list) {
   };
 }
 
+function computeStreak(list) {
+  if (!list.length) return 0;
+  const days = new Set(list.map(r => r.day));
+  let streak = 0;
+  let check = todayStr();
+  if (!days.has(check)) {
+    check = yesterdayStr();
+    if (!days.has(check)) return 0;
+  }
+  while (days.has(check)) {
+    streak++;
+    const d = new Date(check);
+    d.setDate(d.getDate() - 1);
+    const p = n => String(n).padStart(2, "0");
+    check = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+  return streak;
+}
+
+function getTopErrorKeys(list, topN = 5) {
+  const pairs = {};
+  for (const r of list) {
+    if (r.errorPairs) {
+      for (const pair of r.errorPairs) {
+        pairs[pair] = (pairs[pair] || 0) + 1;
+      }
+    }
+  }
+  return Object.entries(pairs)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, topN)
+    .map(([pair, count]) => ({ pair, count }));
+}
+
 /* ============== 文档列表 ============== */
 async function loadDocList() {
   const res = await fetch("/api/docs", { cache: "no-store" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   docs = await res.json();
+}
+
+// Load categories config from JSON file
+let categoriesConfig = null;
+async function loadCategoriesConfig() {
+  try {
+    const res = await fetch("/docs/categories.json", { cache: "no-store" });
+    if (res.ok) categoriesConfig = await res.json();
+  } catch {
+    categoriesConfig = null;
+  }
 }
 
 function categorize(name) {
@@ -134,6 +207,16 @@ function categorize(name) {
   if (base.includes("_en")) lang = "（英文）";
   else if (base.includes("_zh")) lang = "（中文）";
 
+  // Try config file first
+  if (categoriesConfig && categoriesConfig.prefixes) {
+    for (const entry of categoriesConfig.prefixes) {
+      if (base.startsWith(entry.prefix)) {
+        return entry.category + lang;
+      }
+    }
+  }
+
+  // Fallback to hardcoded
   if (base.startsWith("lolita")) return "洛丽塔 Lolita" + lang;
   if (base.startsWith("proust_swann")) return "追忆·斯万之恋" + lang;
   if (base.startsWith("proust_ombre")) return "追忆·在少女们身旁" + lang;
@@ -194,6 +277,13 @@ function pickRandom() {
   return next;
 }
 
+function pickNextDoc() {
+  if (docs.length === 0) return null;
+  const idx = docs.indexOf(currentDoc);
+  if (idx === -1) return pickRandom();
+  return docs[(idx + 1) % docs.length];
+}
+
 function pickInitialDoc() {
   const saved = localStorage.getItem(K_LAST_DOC);
   if (saved && docs.includes(saved)) return saved;
@@ -201,6 +291,7 @@ function pickInitialDoc() {
 }
 
 async function loadDoc(name) {
+  showLoading(true);
   try {
     const res = await fetch("/docs/" + encodeURIComponent(name), { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -214,12 +305,22 @@ async function loadDoc(name) {
     localStorage.setItem(K_LAST_DOC, name);
     renderPassage();
     resetInput();
+    hideLoading();
   } catch (e) {
+    hideLoading();
     statusEl.classList.remove("done");
     statusEl.textContent = `加载「${name}」失败，请重试或换一篇。`;
     console.error("loadDoc failed:", e);
   }
 }
+
+function showLoading(show) {
+  const el = document.getElementById("loadingIndicator");
+  if (!el) return;
+  el.style.display = show ? "block" : "none";
+}
+
+function hideLoading() { showLoading(false); }
 
 function renderPassage() {
   const frag = document.createDocumentFragment();
@@ -230,6 +331,7 @@ function renderPassage() {
     frag.appendChild(span);
   }
   passageEl.replaceChildren(frag);
+  applyZenMode();
 }
 
 function setSpanState(span, state) {
@@ -267,8 +369,108 @@ function resetInput() {
   statusEl.textContent = "";
   statusEl.classList.remove("done");
   lastSavedKey = null;
+  stopTimer();
   update(true);
   inputEl.focus();
+}
+
+/* ============== 计时器模式 ============== */
+function startTimer(seconds) {
+  stopTimer();
+  timerRemaining = seconds;
+  const timerEl = document.getElementById("timerDisplay");
+  if (timerEl) {
+    timerEl.textContent = `${seconds}s`;
+    timerEl.style.display = "inline";
+  }
+  timerInterval = setInterval(() => {
+    timerRemaining--;
+    if (timerEl) timerEl.textContent = `${timerRemaining}s`;
+    if (timerRemaining <= 0) {
+      stopTimer();
+      if (!inputEl.disabled) finishExercise(true);
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  timerRemaining = 0;
+  const timerEl = document.getElementById("timerDisplay");
+  if (timerEl) timerEl.style.display = "none";
+}
+
+function setTimerMode(seconds) {
+  timerMode = seconds;
+  localStorage.setItem(K_TIMER, String(seconds));
+  const sel = document.getElementById("timerSelect");
+  if (sel) sel.value = String(seconds);
+}
+
+/* ============== Zen 模式 ============== */
+function applyZenMode() {
+  if (zenMode) {
+    passageEl.classList.add("zen");
+  } else {
+    passageEl.classList.remove("zen");
+  }
+}
+
+function toggleZenMode() {
+  zenMode = !zenMode;
+  localStorage.setItem(K_ZEN, zenMode ? "1" : "0");
+  applyZenMode();
+  const btn = document.getElementById("zenBtn");
+  if (btn) btn.textContent = zenMode ? "退出禅定" : "禅定模式";
+}
+
+/* ============== 完成练习 ============== */
+function finishExercise(timeUp = false) {
+  const typed = inputEl.value;
+  const { correct, errors } = countStats(typed);
+  const acc = typed.length ? Math.round((correct / typed.length) * 100) : 100;
+  const unit = speedUnitForDoc(currentDoc);
+  let speed = 0;
+  if (startTime) {
+    const mins = (Date.now() - startTime) / 60000;
+    speed = calcSpeed(correct, mins, unit);
+  }
+
+  inputEl.disabled = true;
+  stopTimer();
+  statusEl.classList.add("done");
+
+  const unitLabel = unit.toUpperCase();
+  const title = timeUp ? "时间到！" : "完成！";
+  statusEl.textContent = `${title}准确率 ${acc}% · ${speed} ${unitLabel} · 错误 ${errors} 处`;
+
+  showResultCard({ acc, speed, unitLabel, errors, timeUp });
+
+  if (!lastSavedKey) {
+    recordResult({ speed, speedUnit: unit, acc, errors, typedLen: typed.length, correctLen: correct });
+    if (currentView === "profile") renderProfile();
+  }
+}
+
+function showResultCard({ acc, speed, unitLabel, errors, timeUp }) {
+  const card = document.getElementById("resultCard");
+  if (!card) return;
+  card.style.display = "flex";
+  card.classList.add("result-show");
+  document.getElementById("resultTitle").textContent = timeUp ? "⏱️ 时间到！" : "🎉 完成！";
+  document.getElementById("resultAcc").textContent = `${acc}%`;
+  document.getElementById("resultSpeed").textContent = `${speed} ${unitLabel}`;
+  document.getElementById("resultErr").textContent = `${errors} 处`;
+}
+
+function hideResultCard() {
+  const card = document.getElementById("resultCard");
+  if (!card) return;
+  card.style.display = "none";
+  card.classList.remove("result-show");
 }
 
 /* ============== 实时更新 + 完成时记录 ============== */
@@ -302,40 +504,62 @@ function update(fullRecount = false) {
   statWpm.textContent = speed;
   statErr.textContent = errors;
 
+  // Update progress bar
+  const progBar = document.getElementById("progressBar");
+  if (progBar) progBar.style.width = prog + "%";
+
   const cur = passageEl.querySelector(".current");
-  if (cur) cur.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  if (cur) {
+    cur.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    // Mobile: scroll input into view when typing
+    if (typedLen > 0 && window.innerWidth <= 720) {
+      inputEl.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  }
 
   if (typedLen >= target.length && target.length > 0) {
-    inputEl.disabled = true;
-    statusEl.classList.add("done");
-    const unitLabel = unit.toUpperCase();
-    statusEl.textContent = `完成！准确率 ${acc}% · ${speed} ${unitLabel} · 错误 ${errors} 处`;
-
-    if (!lastSavedKey) {
-      recordResult({ speed, speedUnit: unit, acc, errors, typedLen, correctLen: correct });
-      if (currentView === "profile") renderProfile();
-    }
-  } else {
-    statusEl.classList.remove("done");
-    if (!inputEl.disabled) statusEl.textContent = "";
+    finishExercise(false);
   }
 }
 
 inputEl.addEventListener("input", () => {
-  if (!startTime && inputEl.value.length > 0) startTime = Date.now();
+  if (!startTime && inputEl.value.length > 0) {
+    startTime = Date.now();
+    if (timerMode > 0) startTimer(timerMode);
+  }
   update();
 });
 
 inputEl.addEventListener("paste", (e) => e.preventDefault());
 
 inputEl.addEventListener("keydown", (e) => {
+  // Tab = switch to next article
+  if (e.key === "Tab" && !e.shiftKey) {
+    e.preventDefault();
+    const next = pickNextDoc();
+    if (next) loadDoc(next);
+    return;
+  }
   if (e.key === "Escape") {
     e.preventDefault();
     if (inputEl.value.length > 0 && !confirm("确认重置当前进度？")) return;
     resetInput();
+    hideResultCard();
   } else if (e.key === "Enter" && e.ctrlKey) {
     e.preventDefault();
-    document.getElementById("newBtn").click();
+    const next = pickRandom();
+    if (next) loadDoc(next);
+  }
+});
+
+// Ctrl+1 / Ctrl+2 to switch views
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.key === "1") {
+    e.preventDefault();
+    switchView("practice");
+  } else if (e.ctrlKey && e.key === "2") {
+    e.preventDefault();
+    switchView("profile");
   }
 });
 
@@ -344,15 +568,38 @@ passageEl.addEventListener("click", () => inputEl.focus());
 document.getElementById("newBtn").addEventListener("click", async () => {
   const name = pickRandom();
   if (name) await loadDoc(name);
+  hideResultCard();
 });
 
 document.getElementById("resetBtn").addEventListener("click", () => {
   if (inputEl.value.length > 0 && !confirm("确认重置当前进度？")) return;
   resetInput();
+  hideResultCard();
 });
+
+document.getElementById("zenBtn")?.addEventListener("click", toggleZenMode);
+
+const timerSelect = document.getElementById("timerSelect");
+if (timerSelect) {
+  timerSelect.addEventListener("change", () => {
+    const v = parseInt(timerSelect.value, 10);
+    setTimerMode(v);
+    if (v > 0 && inputEl.value.length > 0 && !startTime) {
+      // If already typing, start timer
+    }
+  });
+  // Restore saved timer
+  const savedTimer = localStorage.getItem(K_TIMER);
+  if (savedTimer) {
+    const v = parseInt(savedTimer, 10);
+    timerSelect.value = String(v);
+    timerMode = v;
+  }
+}
 
 selectEl.addEventListener("change", async () => {
   if (selectEl.value) await loadDoc(selectEl.value);
+  hideResultCard();
 });
 
 /* ============== 视图切换 ============== */
@@ -379,6 +626,7 @@ document.querySelectorAll(".tab").forEach(b => {
 /* ============== Profile 渲染 ============== */
 let wpmChart = null;
 let errChart = null;
+let accChart = null;
 
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -419,12 +667,41 @@ function renderProfileStats(s) {
   if (dayWpm.cnt) dayAvgParts.push(`${dayWpm.avgSpeed} WPM`);
   if (dayCpm.cnt) dayAvgParts.push(`${dayCpm.avgSpeed} CPM`);
   document.getElementById("dayAvgWpm").textContent = dayAvgParts.length ? dayAvgParts.join(" / ") : "0";
+
+  // Streak
+  const streak = computeStreak(loadHistory());
+  document.getElementById("streakDays").textContent = streak > 0 ? `${streak} 天` : "0";
+}
+
+function renderErrorKeys(list) {
+  const topErrors = getTopErrorKeys(list, 5);
+  const el = document.getElementById("errorKeyList");
+  if (!el) return;
+  el.replaceChildren();
+  if (topErrors.length === 0) {
+    el.textContent = "暂无错误键位数据";
+    return;
+  }
+  for (const { pair, count } of topErrors) {
+    const item = document.createElement("div");
+    item.className = "error-key-item";
+    const keySpan = document.createElement("span");
+    keySpan.className = "ek-key";
+    const [wrong, correct] = pair.split("→");
+    keySpan.textContent = `${wrong} → ${correct}`;
+    const countSpan = document.createElement("span");
+    countSpan.className = "ek-count";
+    countSpan.textContent = `×${count}`;
+    item.append(keySpan, countSpan);
+    el.appendChild(item);
+  }
 }
 
 function renderProfile() {
   const list = loadHistory();
   const s = computeStats(list);
   renderProfileStats(s);
+  renderErrorKeys(list);
 
   const listEl = document.getElementById("historyList");
   const recent = list.slice(-30).reverse();
@@ -453,6 +730,15 @@ function renderProfile() {
     err.className = "hi-err";
     err.textContent = `错误 ${r.errors}`;
 
+    // Click to revisit
+    item.style.cursor = "pointer";
+    item.addEventListener("click", () => {
+      if (r.doc && docs.includes(r.doc)) {
+        switchView("practice");
+        loadDoc(r.doc);
+      }
+    });
+
     item.append(date, doc, speed, acc, err);
     listEl.appendChild(item);
   }
@@ -471,11 +757,13 @@ function renderCharts(list) {
   const labels = recent.map((_, i) => `#${list.length - recent.length + i + 1}`);
   const speeds = recent.map(r => recordSpeedValue(r));
   const errs = recent.map(r => r.errors);
+  const accs = recent.map(r => r.acc);
   const speedLabels = recent.map(r => formatSpeed(r));
 
   Chart.defaults.color = muted;
   Chart.defaults.font.family = "Segoe UI, system-ui, sans-serif";
 
+  // WPM Chart
   const ctxWpm = document.getElementById("wpmTrendChart").getContext("2d");
   if (wpmChart) wpmChart.destroy();
   wpmChart = new Chart(ctxWpm, {
@@ -514,6 +802,7 @@ function renderCharts(list) {
     },
   });
 
+  // Error Chart
   const ctxErr = document.getElementById("errChart").getContext("2d");
   if (errChart) errChart.destroy();
   errChart = new Chart(ctxErr, {
@@ -537,11 +826,42 @@ function renderCharts(list) {
       },
     },
   });
+
+  // Accuracy Chart
+  const ctxAcc = document.getElementById("accChart")?.getContext("2d");
+  if (!ctxAcc) return;
+  if (accChart) accChart.destroy();
+  accChart = new Chart(ctxAcc, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "准确率",
+        data: accs,
+        borderColor: "#1a9c54",
+        backgroundColor: "#1a9c5422",
+        tension: 0.3,
+        fill: true,
+        pointRadius: 2,
+        pointHoverRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { title: { display: true, text: "准确率趋势（最近 30 次）", color: ink } },
+      scales: {
+        x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { color: grid } },
+        y: { min: 0, max: 100, ticks: { color: muted }, grid: { color: grid } },
+      },
+    },
+  });
 }
 
 document.getElementById("clearHistoryBtn").addEventListener("click", () => {
   if (!confirm("确认清空全部历史记录？此操作不可撤销。")) return;
   saveHistory([]);
+  errorKeyPairs = {};
   renderProfile();
 });
 
@@ -578,17 +898,45 @@ document.getElementById("importFileInput").addEventListener("change", async (e) 
   }
 });
 
+document.getElementById("resultCloseBtn")?.addEventListener("click", hideResultCard);
+document.getElementById("resultAgainBtn")?.addEventListener("click", () => {
+  hideResultCard();
+  resetInput();
+});
+
 /* ============== 主题切换 ============== */
 function applyTheme(name) {
-  if (name) document.documentElement.setAttribute("data-theme", name);
-  else document.documentElement.removeAttribute("data-theme");
+  if (name === "auto") {
+    document.documentElement.removeAttribute("data-theme");
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    applyColorScheme(mq.matches ? "dark" : "blue");
+  } else if (name) {
+    document.documentElement.setAttribute("data-theme", name);
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
 }
+
+function applyColorScheme(scheme) {
+  document.documentElement.setAttribute("data-theme", scheme);
+}
+
+// Listen for system color scheme changes when in auto mode
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+  const savedTheme = localStorage.getItem(K_THEME);
+  if (savedTheme === "auto") {
+    applyColorScheme(e.matches ? "dark" : "blue");
+  }
+});
 
 const themeSelect = document.getElementById("themeSelect");
 const savedTheme = localStorage.getItem(K_THEME);
 if (savedTheme) {
   applyTheme(savedTheme);
   themeSelect.value = savedTheme;
+} else {
+  applyTheme("auto");
+  themeSelect.value = "auto";
 }
 themeSelect.addEventListener("change", () => {
   const v = themeSelect.value;
@@ -600,6 +948,7 @@ themeSelect.addEventListener("change", () => {
 /* ============== 初始化 ============== */
 (async function init() {
   try {
+    await loadCategoriesConfig();
     await loadDocList();
   } catch (e) {
     passageEl.textContent = "无法连接服务器，请确认 server.py 正在运行。";
@@ -614,4 +963,13 @@ themeSelect.addEventListener("change", () => {
   populateSelect();
   const initial = pickInitialDoc();
   if (initial) await loadDoc(initial);
+
+  // Restore Zen mode
+  const savedZen = localStorage.getItem(K_ZEN);
+  if (savedZen === "1") {
+    zenMode = true;
+    applyZenMode();
+    const zenBtn = document.getElementById("zenBtn");
+    if (zenBtn) zenBtn.textContent = "退出禅定";
+  }
 })();

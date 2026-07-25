@@ -5,23 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>打字练习</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="vendor/chart.umd.min.js"></script>
 </head>
 <body>
   <main class="card">
     <nav class="topbar">
-      <div class="tabs">
-        <button class="tab active" data-view="practice">练习 Practice</button>
-        <button class="tab" data-view="profile">档案 Profile</button>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-view="practice" role="tab" aria-selected="true">练习 Practice</button>
+        <button class="tab" data-view="profile" role="tab" aria-selected="false">档案 Profile</button>
       </div>
-      <div class="theme-picker">
-        <label for="themeSelect">主题</label>
-        <select id="themeSelect" aria-label="选择主题">
-          <option value="blue">浅蓝</option>
-          <option value="dark">深色</option>
-          <option value="beige">米黄</option>
-          <option value="green">青绿</option>
-        </select>
+      <div class="topbar-controls">
+        <div class="timer-control">
+          <label for="timerSelect">计时</label>
+          <select id="timerSelect" aria-label="计时模式">
+            <option value="0">不限时</option>
+            <option value="15">15秒</option>
+            <option value="30">30秒</option>
+            <option value="60">60秒</option>
+          </select>
+          <span id="timerDisplay" class="timer-display" style="display:none;"></span>
+        </div>
+        <button id="zenBtn" type="button" class="ghost zen-btn">禅定模式</button>
+        <div class="theme-picker">
+          <label for="themeSelect">主题</label>
+          <select id="themeSelect" aria-label="选择主题">
+            <option value="auto">跟随系统</option>
+            <option value="blue">浅蓝</option>
+            <option value="dark">深色</option>
+            <option value="beige">米黄</option>
+            <option value="green">青绿</option>
+          </select>
+        </div>
       </div>
     </nav>
 
@@ -42,7 +56,16 @@
         <div class="stat"><span id="statErr">0</span><label>错误</label></div>
       </section>
 
+      <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        <div id="progressBar" class="progress-bar-fill" style="width:0%"></div>
+      </div>
+
       <div id="passage" class="passage" aria-label="待输入文本"></div>
+
+      <div id="loadingIndicator" class="loading-indicator" style="display:none;">
+        <div class="spinner"></div>
+        <span>加载中...</span>
+      </div>
 
       <textarea id="input" class="typebox" rows="4"
         placeholder="在这里输入上面的文本…（一致显示黑色，不一致显示红色）"
@@ -50,10 +73,34 @@
 
       <div id="status" class="status" role="status" aria-live="polite"></div>
 
+      <div id="resultCard" class="result-card" style="display:none;">
+        <div class="result-content">
+          <h2 id="resultTitle">🎉 完成！</h2>
+          <div class="result-stats">
+            <div class="result-stat">
+              <span id="resultAcc">100%</span>
+              <label>准确率</label>
+            </div>
+            <div class="result-stat">
+              <span id="resultSpeed">0 WPM</span>
+              <label>速度</label>
+            </div>
+            <div class="result-stat">
+              <span id="resultErr">0 处</span>
+              <label>错误</label>
+            </div>
+          </div>
+          <div class="result-actions">
+            <button id="resultAgainBtn" type="button">再来一篇</button>
+            <button id="resultCloseBtn" type="button" class="ghost">关闭</button>
+          </div>
+        </div>
+      </div>
+
       <footer class="controls">
         <button id="newBtn" type="button">换一篇（随机）</button>
         <button id="resetBtn" type="button" class="ghost">重置</button>
-        <span class="hint">Esc 重置 · Ctrl+Enter 换篇 · 未输入=灰 · 正确=黑 · 错误=红</span>
+        <span class="hint">Tab 下一篇 · Esc 重置 · Ctrl+Enter 换篇 · Ctrl+1/2 切换视图</span>
       </footer>
     </section>
 
@@ -83,9 +130,20 @@
         <div class="stat"><span id="dayAvgWpm">0</span><label>今日平均 WPM</label></div>
       </section>
 
-      <div class="charts">
+      <section class="stats">
+        <div class="stat"><span id="streakDays">0</span><label>连续天数</label></div>
+        <div class="stat stat-wide">
+          <span>
+            <span id="errorKeyList" class="error-key-list">暂无错误键位数据</span>
+          </span>
+          <label>Top 5 易错键</label>
+        </div>
+      </section>
+
+      <div class="charts charts-3col">
         <div class="chart-box"><canvas id="wpmTrendChart"></canvas></div>
         <div class="chart-box"><canvas id="errChart"></canvas></div>
+        <div class="chart-box"><canvas id="accChart"></canvas></div>
       </div>
 
       <div id="historyList" class="history-list"></div>
