@@ -2,7 +2,7 @@ English | [中文](README.md)
 
 # Typing Web
 
-A typing practice web app built with vanilla HTML/CSS/JavaScript, featuring training profile statistics and chart visualization. All data is stored locally in the browser — no login required, no backend database needed.
+A typing practice web app built with vanilla HTML/CSS/JavaScript, featuring a minimalist focused design, training profile statistics and chart visualization, and bilingual UI support (Chinese/English). All data is stored locally in the browser — no login required, no backend database needed.
 
 ## 🚀 Online Demo
 
@@ -15,7 +15,7 @@ A typing practice web app built with vanilla HTML/CSS/JavaScript, featuring trai
 ### Practice Mode
 - Built-in multi-genre text materials: Lolita, In Search of Lost Time, One Hundred Years of Solitude, Tang poetry, English proverbs, Python/SQL/C++ code snippets, and more
 - Real-time display: progress, accuracy, WPM (English) / CPM (Chinese), error count
-- Character-level highlighting: untyped = gray · correct = black · error = red · current position = blue underline
+- Character-level highlighting: untyped = gray · correct = dark ink · error = red strikethrough · current position = theme-colored underline cursor
 - Supports random document switch / dropdown to select a specific document / reset current progress
 - Paste disabled, auto-lock input after completion, Esc to reset / Ctrl+Enter to change document
 - Remembers the last practiced document
@@ -36,18 +36,24 @@ A typing practice web app built with vanilla HTML/CSS/JavaScript, featuring trai
 ### Training Profile
 - **Overview Statistics**: Total training sessions, total accuracy, historical max WPM, average WPM
 - **Today's Statistics**: Today's training sessions, today's accuracy, today's max WPM, today's average WPM
-- **WPM Trend Chart**: Line chart showing WPM changes over the last 30 sessions
+- **WPM Trend Chart**: Line chart showing speed changes over the last 30 sessions (vertical layout, top-right legend)
 - **Error Count Bar Chart**: Bar chart showing error counts over the last 30 sessions
-- **Accuracy Trend Chart**: Line chart showing accuracy trends over the last 30 sessions
+- **Accuracy Trend Chart**: Line chart showing accuracy trends over the last 30 sessions (percentage)
 - **Profile Filtering**: Supports "All" and "Zen Mode" sub-dataset filtering for independent data view
 - History list: Last 30 session details (time, document, WPM/CPM, accuracy, error count)
 - Zen mode records marked with a "Zen" badge
 - Export / Import JSON history backup (maximum 500 records retained)
 - One-click clear history (with confirmation dialog)
 
+### Bilingual UI
+- Support Chinese / English interface switching
+- All system text, buttons, and chart titles support bilingual display
+- Language preference saved in localStorage, auto-applied on next visit
+
 ### Theme Switching
-4 built-in themes with real-time switching and persistent storage:
-- Light Blue (default)
+5 built-in themes with real-time switching and persistent storage:
+- System (default)
+- Light Blue
 - Dark
 - Beige
 - Green

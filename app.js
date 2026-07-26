@@ -1209,7 +1209,14 @@ function renderCharts(list) {
   const grid = cssVar("--grid") || "rgba(0,0,0,0.06)";
 
   const recent = list.slice(-30);
-  const labels = recent.map((_, i) => `#${list.length - recent.length + i + 1}`);
+  const labels = recent.map(r => {
+    const d = new Date(r.ts);
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const h = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `${m}/${day} ${h}:${min}`;
+  });
   const speeds = recent.map(r => recordSpeedValue(r));
   const errs = recent.map(r => r.errors);
   const accs = recent.map(r => r.acc);
@@ -1238,8 +1245,10 @@ function renderCharts(list) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         title: { display: true, text: t("speed_trend"), color: ink },
+        legend: { position: "top", align: "end", labels: { color: muted, boxWidth: 12, boxHeight: 8 } },
         tooltip: {
           callbacks: {
             label(ctx) {
@@ -1250,8 +1259,12 @@ function renderCharts(list) {
         },
       },
       scales: {
-        x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { color: grid } },
-        y: { beginAtZero: true, ticks: { color: muted }, grid: { color: grid } },
+        x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { display: false } },
+        y: {
+          beginAtZero: true,
+          ticks: { color: muted, maxTicksLimit: 3 },
+          grid: { color: grid },
+        },
       },
     },
   });
@@ -1273,10 +1286,17 @@ function renderCharts(list) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { title: { display: true, text: t("error_trend"), color: ink } },
+      plugins: {
+        title: { display: true, text: t("error_trend"), color: ink },
+        legend: { position: "top", align: "end", labels: { color: muted, boxWidth: 12, boxHeight: 8 } },
+      },
       scales: {
-        x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { color: grid } },
-        y: { beginAtZero: true, ticks: { color: muted }, grid: { color: grid } },
+        x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { display: false } },
+        y: {
+          beginAtZero: true,
+          ticks: { color: muted, maxTicksLimit: 3, callback: v => v + " 个" },
+          grid: { color: grid },
+        },
       },
     },
   });
@@ -1303,10 +1323,18 @@ function renderCharts(list) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { title: { display: true, text: t("acc_trend"), color: ink } },
+      plugins: {
+        title: { display: true, text: t("acc_trend"), color: ink },
+        legend: { position: "top", align: "end", labels: { color: muted, boxWidth: 12, boxHeight: 8 } },
+      },
       scales: {
-        x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { color: grid } },
-        y: { min: 0, max: 100, ticks: { color: muted }, grid: { color: grid } },
+        x: { ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 }, grid: { display: false } },
+        y: {
+          min: 0,
+          max: 100,
+          ticks: { color: muted, maxTicksLimit: 3, callback: v => v + "%" },
+          grid: { color: grid },
+        },
       },
     },
   });

@@ -1,0 +1,11 @@
+.qoder/
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.bat
+*.ps1
+Git 文件夹文件.md
