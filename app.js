@@ -754,7 +754,7 @@ function finishExercise(timeUp = false) {
   showResultCard({ acc, speed, unitLabel, errors, timeUp });
 
   if (!lastSavedKey) {
-    recordResult({ speed, speedUnit: unit, acc, errors, typedLen: typed.length, correctLen: correct, zen: zenMode });
+    recordResult({ speed, speedUnit: unit, acc, errors, typedLen: totalKeystrokes, correctLen: correct, zen: zenMode });
     if (currentView === "profile") renderProfile();
   }
 }
@@ -945,7 +945,7 @@ document.addEventListener("keydown", (e) => {
     statusEl.textContent = `禅定结束 · 准确率 ${acc}% · ${speed} ${unitLabel} · 错误 ${errors} 处`;
     showResultCard({ acc, speed, unitLabel, errors, timeUp: false });
     if (!lastSavedKey) {
-      recordResult({ speed, speedUnit: unit, acc, errors, typedLen: typed.length, correctLen: correct, zen: true });
+      recordResult({ speed, speedUnit: unit, acc, errors, typedLen: totalKeystrokes, correctLen: correct, zen: true });
       if (currentView === "profile") renderProfile();
     }
     zenMode = false;
