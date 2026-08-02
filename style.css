@@ -462,7 +462,7 @@ body {
 }
 .passage .current {
   position: relative;
-  color: var(--ink);
+  color: var(--pending);
 }
 .passage .current::after {
   content: "";
