@@ -1,84 +1,92 @@
 /* ============== 主题变量 ============== */
 :root,
 [data-theme="blue"] {
-  --bg: #faf8f3;
-  --bg-soft: #f5f2eb;
+  --bg: #f3f7fb;
+  --bg-soft: #e7eef5;
   --card: #ffffff;
-  --ink: #2c2a26;
-  --ink-soft: #5c5952;
-  --pending: #c9c5bc;
-  --correct: #2c2a26;
-  --wrong: #c94a4a;
-  --wrong-bg: #faf0f0;
-  --accent: #4a7c59;
-  --accent-soft: #e8efe8;
-  --muted: #9a968e;
-  --panel: #fbf9f4;
-  --border: #ebe7de;
-  --border-soft: #f2efe7;
-  --grid: rgba(44, 42, 38, 0.06);
-  --shadow: 0 1px 2px rgba(44, 42, 38, 0.04), 0 8px 24px rgba(44, 42, 38, 0.06);
-  --shadow-lg: 0 4px 12px rgba(44, 42, 38, 0.06), 0 24px 48px rgba(44, 42, 38, 0.1);
+  --ink: #16202b;
+  --ink-soft: #3d4c5f;
+  --pending: #16202b;
+  --correct: #848c93;
+  --current-bg: #e5f3ef;
+  --wrong: #c23b3b;
+  --wrong-bg: #fdecec;
+  --accent: #1f6f62;
+  --accent-soft: #e5f3ef;
+  --on-accent: #ffffff;
+  --muted: #5c6b7e;
+  --panel: #f7fafc;
+  --border: #d5e0ea;
+  --border-soft: #e6eef5;
+  --grid: rgba(22, 32, 43, 0.07);
+  --shadow: 0 1px 2px rgba(22, 32, 43, 0.04), 0 8px 24px rgba(22, 32, 43, 0.06);
+  --shadow-lg: 0 4px 12px rgba(22, 32, 43, 0.06), 0 24px 48px rgba(22, 32, 43, 0.1);
 }
 [data-theme="dark"] {
-  --bg: #1a1917;
-  --bg-soft: #232220;
-  --card: #272624;
-  --ink: #e8e5de;
-  --ink-soft: #b5b1a8;
-  --pending: #4a4844;
-  --correct: #f0ede6;
-  --wrong: #e87676;
-  --wrong-bg: #3a2a2a;
-  --accent: #7ab38a;
-  --accent-soft: #2a3a2e;
-  --muted: #8a8780;
-  --panel: #2d2c2a;
-  --border: #3a3835;
-  --border-soft: #32302e;
-  --grid: rgba(232, 229, 222, 0.08);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.3), 0 24px 48px rgba(0, 0, 0, 0.4);
+  --bg: #141a1f;
+  --bg-soft: #1c242c;
+  --card: #1e2730;
+  --ink: #e8eef3;
+  --ink-soft: #c5d0da;
+  --pending: #e8eef3;
+  --correct: #6d7378;
+  --current-bg: #243833;
+  --wrong: #f08b86;
+  --wrong-bg: #3a2428;
+  --accent: #7dcec0;
+  --accent-soft: #1c3330;
+  --on-accent: #10211c;
+  --muted: #9aabba;
+  --panel: #222c36;
+  --border: #33404c;
+  --border-soft: #2a3642;
+  --grid: rgba(232, 238, 243, 0.08);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 24px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.32), 0 24px 48px rgba(0, 0, 0, 0.44);
 }
 [data-theme="beige"] {
-  --bg: #f7efe0;
-  --bg-soft: #f0e6d0;
-  --card: #fdfaf2;
-  --ink: #4a3a28;
-  --ink-soft: #7a6a54;
-  --pending: #b8a98a;
-  --correct: #3a2e20;
-  --wrong: #b94a3f;
-  --wrong-bg: #f8e4d8;
-  --accent: #a0732a;
-  --accent-soft: #f0e4ce;
-  --muted: #8a7659;
-  --panel: #fbf3e1;
-  --border: #e8dcc2;
-  --border-soft: #f0e6d0;
-  --grid: rgba(74, 58, 40, 0.06);
-  --shadow: 0 1px 2px rgba(74, 58, 40, 0.04), 0 8px 24px rgba(74, 58, 40, 0.08);
-  --shadow-lg: 0 4px 12px rgba(74, 58, 40, 0.08), 0 24px 48px rgba(74, 58, 40, 0.12);
+  --bg: #f7f3ea;
+  --bg-soft: #efe8da;
+  --card: #fffdf8;
+  --ink: #2c2418;
+  --ink-soft: #5c4e3a;
+  --pending: #2c2418;
+  --correct: #928c81;
+  --current-bg: #e7f0e4;
+  --wrong: #b42318;
+  --wrong-bg: #f8e6e1;
+  --accent: #3f6b45;
+  --accent-soft: #e7f0e4;
+  --on-accent: #ffffff;
+  --muted: #7a6a54;
+  --panel: #fbf7f0;
+  --border: #e4d9c6;
+  --border-soft: #efe6d6;
+  --grid: rgba(44, 36, 24, 0.07);
+  --shadow: 0 1px 2px rgba(44, 36, 24, 0.04), 0 8px 24px rgba(44, 36, 24, 0.07);
+  --shadow-lg: 0 4px 12px rgba(44, 36, 24, 0.07), 0 24px 48px rgba(44, 36, 24, 0.12);
 }
 [data-theme="green"] {
-  --bg: #f0f7f2;
-  --bg-soft: #e5efe8;
+  --bg: #f2f7f3;
+  --bg-soft: #e5f0e8;
   --card: #ffffff;
-  --ink: #2a3a30;
-  --ink-soft: #5a6a5e;
-  --pending: #a8c1b4;
-  --correct: #1e3026;
-  --wrong: #c05045;
-  --wrong-bg: #f8e4e0;
-  --accent: #3a8a62;
-  --accent-soft: #e0f0e6;
-  --muted: #7a8a7e;
-  --panel: #f5faf6;
-  --border: #d5e5db;
-  --border-soft: #e8f0eb;
-  --grid: rgba(42, 58, 48, 0.06);
-  --shadow: 0 1px 2px rgba(42, 58, 48, 0.04), 0 8px 24px rgba(42, 58, 48, 0.08);
-  --shadow-lg: 0 4px 12px rgba(42, 58, 48, 0.08), 0 24px 48px rgba(42, 58, 48, 0.12);
+  --ink: #173026;
+  --ink-soft: #3d5648;
+  --pending: #173026;
+  --correct: #84948c;
+  --current-bg: #e3f3e8;
+  --wrong: #b42318;
+  --wrong-bg: #fdecea;
+  --accent: #1f7a4d;
+  --accent-soft: #e3f3e8;
+  --on-accent: #ffffff;
+  --muted: #5d7366;
+  --panel: #f7fbf8;
+  --border: #d3e4da;
+  --border-soft: #e5f0e8;
+  --grid: rgba(23, 48, 38, 0.07);
+  --shadow: 0 1px 2px rgba(23, 48, 38, 0.04), 0 8px 24px rgba(23, 48, 38, 0.07);
+  --shadow-lg: 0 4px 12px rgba(23, 48, 38, 0.07), 0 24px 48px rgba(23, 48, 38, 0.12);
 }
 
 * { box-sizing: border-box; }
@@ -99,8 +107,8 @@ body {
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Noto Serif SC", "Songti SC", Georgia, "Times New Roman", serif;
   font-size: 17px;
   line-height: 1.7;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
   transition: background 0.4s ease, color 0.4s ease;
 }
 
@@ -120,11 +128,6 @@ body {
   margin-bottom: 32px;
   border-bottom: 1px solid var(--border-soft);
   flex-wrap: wrap;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
-}
-.topbar:hover {
-  opacity: 1;
 }
 .tabs {
   display: flex;
@@ -462,13 +465,15 @@ body {
 }
 .passage .current {
   position: relative;
-  color: var(--pending);
+  color: var(--ink);
+  background: var(--current-bg);
+  border-radius: 3px;
 }
 .passage .current::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: 2px;
+  bottom: 1px;
   width: 100%;
   height: 2px;
   background: var(--accent);
@@ -477,13 +482,13 @@ body {
 }
 @keyframes cursorBlink {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  50% { opacity: 0.55; }
 }
 
 /* Zen mode */
-.passage.zen .pending { color: var(--pending); visibility: visible; opacity: 0.4; }
+.passage.zen .pending { color: var(--pending); visibility: visible; }
 .passage.zen .current {
-  font-weight: 500;
+  font-weight: 600;
 }
 .passage.zen .current::after {
   height: 3px;
@@ -534,7 +539,7 @@ body {
 }
 .typebox::placeholder {
   color: var(--muted);
-  opacity: 0.6;
+  opacity: 1;
 }
 
 .status {
@@ -642,10 +647,7 @@ body {
   flex-wrap: wrap;
   padding-top: 24px;
   border-top: 1px solid var(--border-soft);
-  opacity: 0.8;
-  transition: opacity 0.25s ease;
 }
-.controls:hover { opacity: 1; }
 
 button {
   font-size: 0.88rem;
@@ -653,7 +655,7 @@ button {
   border: none;
   border-radius: 7px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
@@ -678,7 +680,6 @@ button.ghost:hover {
   font-size: 0.75rem;
   margin-left: auto;
   font-family: "Segoe UI", system-ui, sans-serif;
-  opacity: 0.7;
 }
 
 /* ============== Profile 图表 ============== */
@@ -799,7 +800,6 @@ button.ghost:hover {
   body { transition: none; }
   .card { transition: none; }
   .typebox { transition: none; }
-  .topbar { transition: none; }
   .controls { transition: none; }
   .tab { transition: none; }
   .progress-bar-fill { transition: none; }
